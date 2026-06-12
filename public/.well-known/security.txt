@@ -1,0 +1,4 @@
+Contact: mailto:info@arjankapteijn.nl
+Expires: 2027-06-01T00:00:00.000Z
+Preferred-Languages: nl, en
+Canonical: https://www.arjankapteijn.nl/.well-known/security.txt
