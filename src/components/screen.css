@@ -1,20 +1,22 @@
 /* ── Het laptopscherm ───────────────────────────────────────────────────
-   .screen-content (334×216) wordt door drei op de schermmesh geprojecteerd.
-   .screen-wrapper rendert op dubbele grootte en schaalt terug voor scherpe
-   tekst (zelfde truc als in de officiële drei-demo). */
+   .screen-content (668×432 css-px) wordt door drei op de schermmesh
+   geprojecteerd en in Macbook.tsx met scale={0.5} fysiek gehalveerd: zo
+   rastert de browser de tekst op dubbele resolutie (scherp op retina)
+   terwijl het scherm even groot blijft. .screen-wrapper rendert daar
+   bovenop nog eens op dubbele grootte en schaalt terug (drei-demo-truc). */
 
 .screen-content {
-  width: 334px;
-  height: 216px;
+  width: 668px;
+  height: 432px;
   background: #000;
-  border-radius: 3px;
+  border-radius: 6px;
   overflow: hidden;
   padding: 0;
 }
 
 .screen-wrapper {
-  width: 668px;
-  height: 432px;
+  width: 1336px;
+  height: 864px;
   transform: scale(0.5);
   transform-origin: top left;
   font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
@@ -29,32 +31,32 @@
   background:
     radial-gradient(ellipse 90% 60% at 70% 110%, #1d3a7a 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 15% -10%, #3b1d6e 0%, transparent 55%),
-    radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 40% 70%, #fff 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 60% 20%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 80% 50%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 90% 85%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 10% 80%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 20% 30%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 40% 70%, #fff 50%, transparent 51%),
+    radial-gradient(3px 3px at 60% 20%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 80% 50%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 90% 85%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 10% 80%, #fff 50%, transparent 51%),
     linear-gradient(180deg, #060a18 0%, #0b1230 100%);
 }
 
 /* ── Menubalk ───────────────────────────────────────────────────────── */
 .screen-menubar {
-  height: 30px;
+  height: 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 14px;
-  font-size: 13px;
+  padding: 0 28px;
+  font-size: 26px;
   color: rgba(255, 255, 255, 0.92);
   background: rgba(20, 24, 40, 0.55);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(16px);
 }
 
 .screen-menubar__left,
 .screen-menubar__right {
   display: flex;
-  gap: 14px;
+  gap: 28px;
   align-items: center;
 }
 
@@ -64,11 +66,11 @@
 }
 
 .screen-menubar__apple {
-  font-size: 15px;
+  font-size: 30px;
 }
 
 .screen-menubar__right {
-  font-size: 12px;
+  font-size: 24px;
   opacity: 0.85;
 }
 
@@ -84,18 +86,18 @@
 
 .menubar-battery:hover {
   color: #ffe9b3;
-  text-shadow: 0 0 6px rgba(255, 220, 120, 0.6);
+  text-shadow: 0 0 12px rgba(255, 220, 120, 0.6);
 }
 
 /* ── Bureaubladfoto ─────────────────────────────────────────────────── */
 .desktop-photo {
   position: absolute;
-  top: 46px;
-  right: 22px;
+  top: 92px;
+  right: 44px;
   background: #f5f2ea;
   border: none;
-  padding: 7px 7px 5px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  padding: 14px 14px 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
   transform: rotate(3deg);
   cursor: pointer;
   transition: transform 0.15s ease;
@@ -108,8 +110,8 @@
 }
 
 .desktop-photo img {
-  width: 92px;
-  height: 92px;
+  width: 184px;
+  height: 184px;
   object-fit: cover;
   display: block;
   background: #20305c;
@@ -118,8 +120,8 @@
 
 .desktop-photo span {
   display: block;
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: 8px;
+  font-size: 22px;
   color: #333;
   text-align: center;
 }
@@ -127,32 +129,32 @@
 /* ── Terminalvenster ────────────────────────────────────────────────── */
 .term-window {
   position: absolute;
-  top: 52px;
-  left: 20px;
-  width: 500px;
-  height: 350px;
+  top: 104px;
+  left: 40px;
+  width: 1000px;
+  height: 700px;
   display: flex;
   flex-direction: column;
   background: rgba(13, 16, 26, 0.93);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 36px 100px rgba(0, 0, 0, 0.6);
 }
 
 .term-titlebar {
-  height: 28px;
+  height: 56px;
   flex: none;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px;
+  gap: 14px;
+  padding: 0 20px;
   background: linear-gradient(180deg, #3a3f4d 0%, #2c303c 100%);
 }
 
 .term-dot {
-  width: 11px;
-  height: 11px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
 }
 
@@ -163,16 +165,16 @@
 .term-title {
   flex: 1;
   text-align: center;
-  font-size: 12px;
+  font-size: 24px;
   color: rgba(255, 255, 255, 0.65);
-  margin-right: 47px; /* compenseert de stoplichtjes voor echte centrering */
+  margin-right: 94px; /* compenseert de stoplichtjes voor echte centrering */
 }
 
 .term-body {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 12px;
-  font-size: 15px;
+  padding: 20px 24px;
+  font-size: 30px;
   line-height: 1.5;
   color: #d6e4d6;
   cursor: text;
