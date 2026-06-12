@@ -28,3 +28,7 @@ dist-ssr
 
 # Scheepslogboek (bezoekersdata hoort niet in git)
 public/terminal.log
+
+# Secrets en lokale data
+.env
+data/

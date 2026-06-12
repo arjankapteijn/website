@@ -1,0 +1,23 @@
+# Voor TrueNAS SCALE (Apps → Discover Apps → ⋮ → Install via YAML) of
+# elke andere Docker-host. Hang de container daarna achter Nginx Proxy
+# Manager voor TLS/Let's Encrypt (zie README).
+
+services:
+  website:
+    build: .
+    container_name: arjankapteijn-website
+    restart: unless-stopped
+    ports:
+      - '8080:8080' # pas de host-poort aan als 8080 bezet is
+    env_file: .env # SMTP-gegevens; zie .env.example
+    volumes:
+      - ./data:/data # persistent scheepslogboek (terminal.log)
+    # ── hardening ──
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=8m
+    mem_limit: 256m
+    pids_limit: 64

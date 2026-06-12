@@ -1,0 +1,10 @@
+node_modules
+dist
+data
+.env
+.git
+.claude
+public/terminal.log
+*.log
+README.md
+MEMORY.md

@@ -21,9 +21,11 @@ interactieve terminal, met de aarde en een ruimtestation op de achtergrond.
 - **Terminal**: het scherm is een drei `<Html transform occlude>` op de
   schermmesh; de terminal is een eigen React-component (geen xterm.js —
   bewust licht gehouden).
-- **E-mail**: via `mailto:` naar info@arjankapteijn.nl, zonder backend. Het
-  e-mailcommando toont een privacymelding (geen onnodige persoonsgegevens
-  delen).
+- **E-mail**: server-side via SMTP2GO (eigen minimale SMTP-client in
+  `server/smtp.js`, impliciete TLS poort 465) naar info@arjankapteijn.nl,
+  met het antwoordadres van de bezoeker als Reply-To. Credentials alleen
+  in `.env` (nooit in git). Fallback: `mailto:`. Het e-mailcommando toont
+  een privacymelding (geen onnodige persoonsgegevens delen).
 - **Tweetalig**: NL/EN op basis van domein (.nl → Nederlands, .com → Engels),
   te overschrijven met het `lang`-commando of `?lang=`.
 - **Live data**: hoogte/snelheid in de HUD, de ISS-marker op de globe én de
@@ -33,17 +35,26 @@ interactieve terminal, met de aarde en een ruimtestation op de achtergrond.
 - **Bezoekers-IP**: de terminalprompt toont het IP van de bezoeker zelf
   (api.ipify.org).
 - **Scheepslogboek**: getypte commando's gaan naar een plat logbestand,
-  nieuwste bovenaan, publiek op /terminal.log. Géén externe dienst (Arjan
-  wilde expliciet geen Supabase): lokaal schrijft een Vite-plugin naar
-  public/terminal.log, in productie doet server/server.js (zero-dependency
-  Node, serveert ook dist/) dat. IP's gemaskeerd, e-mailinhoud nooit gelogd.
-  Logboek hoeft niet in de site-interface te zien te zijn (geen log-commando).
+  nieuwste bovenaan, op /terminal.log. Géén externe dienst (Arjan wilde
+  expliciet geen Supabase): lokaal schrijft een Vite-plugin naar
+  public/terminal.log, in productie server/server.js (zero-dependency Node,
+  serveert ook dist/; logbestand in DATA_DIR=/data-volume, persistent).
+  IP's gemaskeerd, e-mailinhoud nooit gelogd. Bewust niet zichtbaar in de
+  interface: geen log-commando en geen opstartmelding (keuze van Arjan).
+- **Hosting**: Docker-container op zijn eigen TrueNAS thuis (geen
+  DigitalOcean meer — dat plan is losgelaten), achter Nginx Proxy Manager
+  met Let's Encrypt. Hardened: non-root, read-only rootfs, cap_drop ALL,
+  no-new-privileges, mem/pids-limiet, healthcheck op /healthz.
 
 ## Openstaande punten voor Arjan
 
 - Bio verder aanvullen in `src/i18n.ts` (titel + skills staan er al, op
   basis van LinkedIn: IT-consultant & softwaredeveloper bij ContactCare).
-- Loggen vermelden in een privacyverklaring (AVG).
+- Loggen vermelden in een privacyverklaring (AVG) — de interface meldt
+  het bewust niet.
+- Container uitrollen op TrueNAS + NPM-proxyhosts + DNS (zie README).
+- SMTP2GO-wachtwoord roteren (is in een chatsessie gedeeld) en de nieuwe
+  waarde alleen in `.env` op de TrueNAS zetten.
 - `public/photo.svg` vervangen door een echte foto.
 - DNS van arjankapteijn.nl en arjankapteijn.com naar DigitalOcean wijzen en
   de domeinen activeren in `.do/app.yaml`.
