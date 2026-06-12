@@ -1,0 +1,235 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #04060d;
+  color: #e8eaf2;
+  font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Cascadia Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  position: relative;
+}
+
+canvas {
+  display: block;
+}
+
+/* ── Vignette: alsof je door een stationsraam kijkt ─────────────────── */
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 4, 10, 0.55) 100%);
+  z-index: 5;
+}
+
+/* ── HUD-hoekjes ────────────────────────────────────────────────────── */
+.hud {
+  position: fixed;
+  z-index: 6;
+  pointer-events: none;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(160, 190, 255, 0.55);
+  text-shadow: 0 0 8px rgba(80, 130, 255, 0.35);
+}
+
+.hud a {
+  pointer-events: auto;
+  color: rgba(160, 190, 255, 0.8);
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(160, 190, 255, 0.4);
+}
+
+.hud a:hover {
+  color: #cfe0ff;
+}
+
+.hud--tl { top: 18px; left: 22px; }
+.hud--tr { top: 18px; right: 22px; text-align: right; }
+.hud--bl { bottom: 18px; left: 22px; }
+.hud--br { bottom: 18px; right: 22px; text-align: right; }
+
+.hud strong {
+  display: block;
+  font-size: 13px;
+  color: rgba(220, 232, 255, 0.85);
+  letter-spacing: 0.2em;
+}
+
+.hud-live {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 9px;
+  color: rgba(126, 231, 135, 0.75);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@media (max-width: 640px) {
+  .hud--bl, .hud--tr { display: none; }
+}
+
+/* ── Laadscherm ─────────────────────────────────────────────────────── */
+.loader-fallback {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #04060d;
+  z-index: 20;
+  color: rgba(160, 190, 255, 0.8);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* ── Foto-modal ─────────────────────────────────────────────────────── */
+.photo-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 5, 12, 0.72);
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.photo-modal {
+  width: min(420px, calc(100vw - 40px));
+  background: linear-gradient(165deg, #11182b 0%, #0a0f1d 100%);
+  border: 1px solid rgba(140, 175, 255, 0.25);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(70, 120, 255, 0.12);
+  padding: 26px;
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.photo-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: rgba(160, 190, 255, 0.6);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.photo-modal__close:hover { color: #fff; }
+
+.photo-modal__header {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.photo-modal__img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border: 2px solid rgba(140, 175, 255, 0.35);
+  background: #1a2440;
+}
+
+.photo-modal h2 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  letter-spacing: 0.04em;
+  color: #f0f4ff;
+}
+
+.photo-modal__sub {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(160, 190, 255, 0.75);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.photo-modal__bio {
+  margin: 18px 0 20px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(214, 224, 245, 0.88);
+}
+
+.photo-modal__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.photo-modal__actions a {
+  flex: 1;
+  text-align: center;
+  padding: 10px 12px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #dce8ff;
+  border: 1px solid rgba(140, 175, 255, 0.4);
+  background: rgba(70, 120, 255, 0.1);
+  transition: background 0.15s;
+}
+
+.photo-modal__actions a:hover {
+  background: rgba(70, 120, 255, 0.28);
+}
+
+/* ── Hint onderin ───────────────────────────────────────────────────── */
+.hint {
+  position: fixed;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  pointer-events: none;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(160, 190, 255, 0.45);
+  animation: pulse 3s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+/* ── Alleen voor screenreaders / SEO ────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
