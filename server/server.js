@@ -40,6 +40,34 @@ const SMTP = {
   from: process.env.MAIL_FROM || 'Station AK-01 <noreply@arjankapteijn.nl>',
 }
 
+// ─── Security-headers (internet.nl) ─────────────────────────────────────
+// CSP-randvoorwaarden van deze site: React/drei zetten inline
+// style-attributen ('unsafe-inline' in style-src), de DRACO-decoder draait
+// als blob-worker met WASM ('wasm-unsafe-eval' + worker-src blob:) en de
+// site praat met de ISS- en IP-API's (connect-src).
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self' 'wasm-unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    // blob: — GLTFLoader laadt texturen die in het .glb-model zitten als blob-URL
+    "img-src 'self' data: blob:",
+    // blob: — three.js haalt model-texturen met fetch() op via blob-URL's
+    "connect-src 'self' blob: https://api.wheretheiss.at https://api.ipify.org",
+    "worker-src 'self' blob:",
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; '),
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  // TLS termineert bij de reverse proxy; over plain http negeren browsers dit
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+}
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -244,6 +272,7 @@ try {
 
 http
   .createServer((req, res) => {
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value)
     if (req.method === 'POST' && req.url === '/api/log') {
       handleLogPost(req, res).catch(() => res.writeHead(500).end())
     } else if (req.method === 'POST' && req.url === '/api/email') {
