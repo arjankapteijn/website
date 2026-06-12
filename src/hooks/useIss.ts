@@ -13,6 +13,9 @@ export interface IssData {
 
 export const ISS_API = 'https://api.wheretheiss.at/v1/satellites/25544'
 
+// Pollinterval — de HUD telt hiernaar af
+export const ISS_INTERVAL_MS = 15_000
+
 export async function fetchIss(): Promise<IssData | null> {
   try {
     const res = await fetch(ISS_API)
@@ -28,7 +31,7 @@ export async function fetchIss(): Promise<IssData | null> {
  * Geeft null terug zolang er (nog) geen data is — de UI valt dan
  * terug op statische waarden.
  */
-export function useIss(intervalMs = 15_000): IssData | null {
+export function useIss(intervalMs = ISS_INTERVAL_MS): IssData | null {
   const [data, setData] = useState<IssData | null>(null)
 
   useEffect(() => {

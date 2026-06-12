@@ -5,7 +5,7 @@ import Scene from './components/Scene'
 import PhotoModal from './components/PhotoModal'
 import { profile } from './config'
 import { detectLang, saveLang, strings, type Lang } from './i18n'
-import { useIss } from './hooks/useIss'
+import { ISS_INTERVAL_MS, useIss } from './hooks/useIss'
 
 export default function App() {
   const [photoOpen, setPhotoOpen] = useState(false)
@@ -17,6 +17,18 @@ export default function App() {
     saveLang(l)
     setLangState(l)
   }
+
+  // aftellen naar de volgende ISS-meting; iedere nieuwe meting reset de teller
+  const [nextIn, setNextIn] = useState(ISS_INTERVAL_MS / 1000)
+  useEffect(() => {
+    if (!iss) return
+    const arrived = Date.now()
+    const id = setInterval(
+      () => setNextIn(Math.max(0, Math.round((ISS_INTERVAL_MS - (Date.now() - arrived)) / 1000))),
+      500,
+    )
+    return () => clearInterval(id)
+  }, [iss])
 
   useEffect(() => {
     document.documentElement.lang = lang
@@ -54,7 +66,9 @@ export default function App() {
             {iss.latitude.toFixed(1)}° {iss.longitude.toFixed(1)}° ·{' '}
             {iss.visibility === 'daylight' ? `☀ ${t.hud.daylight}` : `● ${t.hud.eclipsed}`}
             <br />
-            <span className="hud-live">{t.hud.live}</span>
+            <span className="hud-live">
+              {t.hud.live} · {t.hud.nextUpdate} {String(nextIn).padStart(2, '0')}s
+            </span>
           </>
         )}
       </div>
