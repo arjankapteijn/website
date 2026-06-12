@@ -7,6 +7,8 @@ export interface IssData {
   velocity: number // km/h
   visibility: 'daylight' | 'eclipsed' | string
   timestamp: number
+  solar_lat: number // sub-solaire punt: waar de zon recht boven staat
+  solar_lon: number
 }
 
 export const ISS_API = 'https://api.wheretheiss.at/v1/satellites/25544'
