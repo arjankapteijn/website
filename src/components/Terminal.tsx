@@ -212,15 +212,6 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
           { text: '' },
         )
         break
-      case 'contact':
-        print(
-          { text: `  e-mail    ${profile.email}`, cls: 'accent' },
-          { text: `  linkedin  ${profile.linkedin}`, cls: 'accent' },
-          { text: '' },
-          { text: t.contactTip, cls: 'dim' },
-          { text: '' },
-        )
-        break
       case 'email':
       case 'mail':
         startEmail()

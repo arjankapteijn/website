@@ -70,7 +70,6 @@ const nl = {
       { text: 'Beschikbare commando’s:', cls: 'accent' },
       { text: '  about      wie is Arjan?' },
       { text: '  skills     waar is hij goed in?' },
-      { text: '  contact    e-mail & LinkedIn' },
       { text: '  email      stuur een e-mail vanuit de terminal' },
       { text: '  photo      open de foto op het bureaublad' },
       { text: '  linkedin   open het LinkedIn-profiel' },
@@ -141,7 +140,6 @@ const nl = {
         { text: '' },
       ] as TermLine[],
     skillsHeader: 'Skills:',
-    contactTip: "Tip: typ 'email' om direct vanuit de terminal te mailen.",
     neofetchLines: [
       'Host: MacBook Pro M1 Max',
       'Chip: M1 Max · 10-core',
@@ -209,7 +207,6 @@ const en: typeof nl = {
       { text: 'Available commands:', cls: 'accent' },
       { text: '  about      who is Arjan?' },
       { text: '  skills     what is he good at?' },
-      { text: '  contact    e-mail & LinkedIn' },
       { text: '  email      send an e-mail from the terminal' },
       { text: '  photo      open the photo on the desktop' },
       { text: '  linkedin   open the LinkedIn profile' },
@@ -279,7 +276,6 @@ const en: typeof nl = {
       { text: '' },
     ],
     skillsHeader: 'Skills:',
-    contactTip: "Tip: type 'email' to send a mail straight from the terminal.",
     neofetchLines: [
       'Host: MacBook Pro M1 Max',
       'Chip: M1 Max · 10-core',
