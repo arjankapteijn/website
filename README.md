@@ -91,9 +91,49 @@ docker compose up -d --build
 curl http://localhost:8090/healthz  # → ok
 ```
 
-(Op TrueNAS SCALE kan hetzelfde via Apps → *Install via YAML* met de
-inhoud van `docker-compose.yml`, maar git clone + compose is het
-makkelijkst bij te werken.)
+NB: een container die je zo via SSH start draait prima (en herstart
+automatisch dankzij `restart: unless-stopped`), maar verschijnt **niet**
+op de Apps-pagina van TrueNAS — die toont alleen apps die via de eigen
+middleware zijn geïnstalleerd. De "Containers"-toggle (Incus-virtualisatie
+voor VM's/LXC) staat hier ook los van en kan gewoon uit blijven.
+
+### Optioneel: zichtbaar maken in de TrueNAS Apps-UI
+
+Wil je een start/stop-knop en status in de webinterface, registreer de
+container dan als custom app:
+
+```bash
+cd /mnt/<pool>/apps/arjankapteijn
+docker compose down          # stop de CLI-versie
+docker compose build         # image lokaal bouwen/verversen
+```
+
+Dan **Apps → Discover Apps → ⋮ → Install via YAML**, naam
+`arjankapteijn`, met deze inhoud (absolute paden, vooraf gebouwd image):
+
+```yaml
+services:
+  website:
+    image: arjankapteijn-website
+    container_name: arjankapteijn-website
+    restart: unless-stopped
+    ports:
+      - '8090:8080'
+    env_file: /mnt/<pool>/apps/arjankapteijn/.env
+    volumes:
+      - /mnt/<pool>/apps/arjankapteijn/data:/data
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=8m
+    mem_limit: 256m
+    pids_limit: 64
+```
+
+Updaten gaat dan met `git pull && docker compose build` gevolgd door een
+restart van de app in de UI.
 
 ### Achter Nginx Proxy Manager (Let's Encrypt)
 
