@@ -89,10 +89,22 @@ Elke push naar `main` triggert daarna automatisch een nieuwe deploy.
 
 ## Live ISS-data
 
-De hoogte/snelheid in de HUD en het `iss`-commando komen van
-`https://api.wheretheiss.at/v1/satellites/25544` (gratis, ±1 request/seconde
-toegestaan; de site pollt elke 15 s). Valt de API weg, dan toont de HUD
-statische fallback-waarden.
+De site gebruikt `https://api.wheretheiss.at/v1/satellites/25544` (gratis,
+±1 request/seconde toegestaan; de site pollt elke 15 s):
+
+- **HUD** — echte hoogte, snelheid, positie en of het ISS in het zonlicht
+  of in de aardschaduw vliegt.
+- **ISS-marker op de globe** — een pulserende groene reticle op de actuele
+  positie, met een spoor van eerdere posities. De globe draait langzaam mee
+  met het ISS, alsof station AK-01 ernaast meevliegt.
+- **Echte zonnestand** — het zonlicht op de aarde volgt het sub-solaire punt
+  (`solar_lat`/`solar_lon`), dus de dag/nacht-grens op de globe klopt met de
+  werkelijkheid. De laptop heeft eigen sfeerverlichting (three.js layers),
+  zodat die er altijd goed uitziet.
+- **`iss`-commando** — live rapport in de terminal.
+
+Valt de API weg, dan toont de HUD statische fallback-waarden en blijft de
+globe in de laatste stand staan.
 
 ## Credits & licenties
 

@@ -33,7 +33,7 @@ export default function App() {
     <>
       <Canvas dpr={[1, 2]} camera={{ position: [0, 1.5, 24], fov: 38 }}>
         <Suspense fallback={null}>
-          <Scene lang={lang} setLang={setLang} onOpenPhoto={() => setPhotoOpen(true)} />
+          <Scene lang={lang} setLang={setLang} iss={iss} onOpenPhoto={() => setPhotoOpen(true)} />
         </Suspense>
       </Canvas>
       <Loader />
