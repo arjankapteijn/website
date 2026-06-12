@@ -79,7 +79,10 @@ export default function App() {
         </a>
       </div>
 
-      <div className="hint">{t.hint}</div>
+      <div className="hint">
+        <span className="hint-drag">{t.hintDrag} · </span>
+        {t.hintAction}
+      </div>
 
       {photoOpen && (
         <PhotoModal

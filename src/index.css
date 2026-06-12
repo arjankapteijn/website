@@ -79,8 +79,15 @@ canvas {
   animation: pulse 2.4s ease-in-out infinite;
 }
 
+/* Smal scherm: de ISS-data rechtsboven past niet meer naast de naam */
 @media (max-width: 640px) {
-  .hud--bl, .hud--tr { display: none; }
+  .hud--tr { display: none; }
+}
+
+/* Mobiel (smal, laag óf touch): koffie-regel weg en alleen de korte hint */
+@media (max-width: 640px), (max-height: 500px), (hover: none) and (pointer: coarse) {
+  .hud--bl { display: none; }
+  .hint-drag { display: none; }
 }
 
 /* ── Laadscherm ─────────────────────────────────────────────────────── */
