@@ -191,10 +191,12 @@ canvas {
   gap: 10px;
 }
 
-.photo-modal__actions a {
+.photo-modal__actions a,
+.photo-modal__actions button {
   flex: 1;
   text-align: center;
   padding: 10px 12px;
+  font-family: inherit;
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -203,9 +205,11 @@ canvas {
   border: 1px solid rgba(140, 175, 255, 0.4);
   background: rgba(70, 120, 255, 0.1);
   transition: background 0.15s;
+  cursor: pointer;
 }
 
-.photo-modal__actions a:hover {
+.photo-modal__actions a:hover,
+.photo-modal__actions button:hover {
   background: rgba(70, 120, 255, 0.28);
 }
 

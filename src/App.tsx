@@ -67,7 +67,17 @@ export default function App() {
 
       <div className="hint">{t.hint}</div>
 
-      {photoOpen && <PhotoModal lang={lang} onClose={() => setPhotoOpen(false)} />}
+      {photoOpen && (
+        <PhotoModal
+          lang={lang}
+          onClose={() => setPhotoOpen(false)}
+          onEmail={() => {
+            // modal dicht en de e-mailflow in de terminal starten
+            setPhotoOpen(false)
+            window.dispatchEvent(new Event('ak:start-email'))
+          }}
+        />
+      )}
 
       {/* Voor zoekmachines en screenreaders */}
       <div className="visually-hidden">
