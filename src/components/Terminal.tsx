@@ -139,6 +139,33 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
     }
   }
 
+  const startEmail = () => {
+    if (emailStep !== 'none') {
+      inputRef.current?.focus()
+      return
+    }
+    print(
+      { text: `${t.emailIntro} ${profile.email}`, cls: 'accent' },
+      { text: t.emailPrivacy, cls: 'warn' },
+      { text: t.emailSubjectAsk, cls: 'dim' },
+    )
+    setEmailStep('subject')
+  }
+
+  // de e-mailknop in de foto-modal start de e-mailflow hier in de terminal
+  const startEmailRef = useRef(startEmail)
+  useEffect(() => {
+    startEmailRef.current = startEmail
+  })
+  useEffect(() => {
+    const onStartEmail = () => {
+      startEmailRef.current()
+      inputRef.current?.focus()
+    }
+    window.addEventListener('ak:start-email', onStartEmail)
+    return () => window.removeEventListener('ak:start-email', onStartEmail)
+  }, [])
+
   const neofetch = (): TermLine[] => {
     const info = [`${user}@ak-01`, '---------------', ...t.neofetchLines]
     return APPLE_ART.map((art, i) => ({
@@ -196,12 +223,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         break
       case 'email':
       case 'mail':
-        print(
-          { text: `${t.emailIntro} ${profile.email}`, cls: 'accent' },
-          { text: t.emailPrivacy, cls: 'warn' },
-          { text: t.emailSubjectAsk, cls: 'dim' },
-        )
-        setEmailStep('subject')
+        startEmail()
         break
       case 'linkedin':
         window.open(profile.linkedin, '_blank', 'noopener')

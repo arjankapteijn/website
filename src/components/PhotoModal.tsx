@@ -5,9 +5,10 @@ import { strings, type Lang } from '../i18n'
 interface PhotoModalProps {
   lang: Lang
   onClose: () => void
+  onEmail: () => void
 }
 
-export default function PhotoModal({ lang, onClose }: PhotoModalProps) {
+export default function PhotoModal({ lang, onClose, onEmail }: PhotoModalProps) {
   const t = strings[lang]
 
   useEffect(() => {
@@ -36,7 +37,9 @@ export default function PhotoModal({ lang, onClose }: PhotoModalProps) {
           <a href={profile.linkedin} target="_blank" rel="noreferrer">
             LinkedIn
           </a>
-          <a href={`mailto:${profile.email}`}>E-mail</a>
+          <button type="button" onClick={onEmail}>
+            E-mail
+          </button>
         </div>
       </div>
     </div>
