@@ -218,12 +218,12 @@ async function handleEmailPost(req, res) {
 
 // ─── Zonnepanelen via SolarEdge ─────────────────────────────────────────
 // SolarEdge hanteert een daglimiet (~300 calls); de server cachet daarom
-// 5 minuten en de API-key blijft hier — nooit richting de browser.
+// 15 minuten en de API-key blijft hier — nooit richting de browser.
 
 const SOLAR = {
   key: process.env.SOLAREDGE_API_KEY || '',
   site: process.env.SOLAREDGE_SITE_ID || '',
-  ttlMs: 5 * 60_000,
+  ttlMs: 15 * 60_000,
 }
 let solarCache = { at: 0, body: null }
 

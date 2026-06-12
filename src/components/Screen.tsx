@@ -51,7 +51,7 @@ export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
               title={t.solar.batteryTitle}
               onClick={() => window.dispatchEvent(new Event('ak:open-solar'))}
             >
-              🔋 {solarPercent(solar)}%
+              {solarPercent(solar) <= 15 ? '🪫' : '🔋'} {solarPercent(solar)}%
             </button>
           ) : (
             <span>🔋 84%</span>

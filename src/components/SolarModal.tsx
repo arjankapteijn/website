@@ -43,7 +43,7 @@ export default function SolarModal({ lang, onClose }: SolarModalProps) {
           <dl className="solar-stats">
             <dt>{t.current}</dt>
             <dd>
-              {Math.round(data.power).toLocaleString(locale)} W · {solarPercent(data)}% {t.ofPeak}
+              {Math.round(data.power).toLocaleString(locale)} W · {solarPercent(data)}% {t.ofPeak} {peakKwp} kWp
             </dd>
             <dt>{t.today}</dt>
             <dd>{kwh(data.today)}</dd>
@@ -51,9 +51,11 @@ export default function SolarModal({ lang, onClose }: SolarModalProps) {
             <dd>{kwh(data.month)}</dd>
             <dt>{t.lifetime}</dt>
             <dd>{kwh(data.lifetime, 0)}</dd>
-            <dt>{t.system}</dt>
+            <dt>{t.inverter}</dt>
+            <dd>{solar.inverter}</dd>
+            <dt>{t.panels}</dt>
             <dd>
-              {solar.panels} × {solar.panelType} ({solar.panelWatt} Wp) · {peakKwp} kWp
+              {solar.panels} × {solar.panelType} ({solar.panelWatt} Wp)
             </dd>
           </dl>
         ) : (
@@ -61,7 +63,12 @@ export default function SolarModal({ lang, onClose }: SolarModalProps) {
         )}
         <p className="solar-source">
           {t.source}
-          {data?.updatedAt ? ` · ${t.updated}: ${data.updatedAt}` : ''}
+          {data?.updatedAt && (
+            <>
+              <br />
+              {t.updated}: {data.updatedAt}
+            </>
+          )}
         </p>
       </div>
     </div>
