@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { profile } from '../config'
 import { strings, type Lang, type TermLine } from '../i18n'
 import { fetchIss } from '../hooks/useIss'
-import { logAvailable, logCommand, useIp } from '../lib/log'
+import { logCommand, useIp } from '../lib/log'
+import { mailtoUrl, sendEmail } from '../lib/mail'
 
-type EmailStep = 'none' | 'subject' | 'body' | 'confirm'
+type EmailStep = 'none' | 'subject' | 'body' | 'reply' | 'confirm'
 
 // Breedte vast op 20 tekens zodat de infokolom strak uitlijnt en de
 // regel (20 + 2 + ~24) binnen het terminalvenster past zonder te wrappen.
@@ -39,7 +40,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   const [input, setInput] = useState('')
   const [booted, setBooted] = useState(false)
   const [emailStep, setEmailStep] = useState<EmailStep>('none')
-  const emailDraft = useRef({ subject: '', body: '' })
+  const emailDraft = useRef({ subject: '', body: '', replyTo: '' })
   const history = useRef<string[]>([])
   const historyIdx = useRef(-1)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -48,28 +49,19 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   // de boot-taal is de taal op het moment van mounten
   const initialLang = useRef(lang)
 
-  // opstart-animatie (in de taal waarmee de pagina opent); de
-  // privacymelding over het logboek verschijnt alleen als het logbestand
-  // op deze hosting echt bestaat
+  // opstart-animatie (in de taal waarmee de pagina opent)
   useEffect(() => {
     setLines([]) // voorkomt dubbele boot-regels bij StrictMode-remount in dev
-    const bootStrings = strings[initialLang.current].term
-    let boot = bootStrings.boot
+    const boot = strings[initialLang.current].term.boot
     let i = 0
-    let id: ReturnType<typeof setInterval>
-    void logAvailable().then((available) => {
-      if (available) {
-        boot = [...boot.slice(0, -1), { text: bootStrings.bootLogNotice, cls: 'dim' }, { text: '' }]
+    const id = setInterval(() => {
+      setLines((prev) => [...prev, boot[i]])
+      i += 1
+      if (i >= boot.length) {
+        clearInterval(id)
+        setBooted(true)
       }
-      id = setInterval(() => {
-        setLines((prev) => [...prev, boot[i]])
-        i += 1
-        if (i >= boot.length) {
-          clearInterval(id)
-          setBooted(true)
-        }
-      }, 220)
-    })
+    }, 220)
     return () => clearInterval(id)
   }, [])
 
@@ -85,9 +77,11 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
       ? t.promptSubject
       : emailStep === 'body'
         ? t.promptBody
-        : emailStep === 'confirm'
-          ? t.promptConfirm
-          : `${user}@ak-01 ~ % `
+        : emailStep === 'reply'
+          ? t.promptReply
+          : emailStep === 'confirm'
+            ? t.promptConfirm
+            : `${user}@ak-01 ~ % `
 
   const runEmailStep = (value: string) => {
     if (emailStep === 'subject') {
@@ -104,21 +98,40 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         return
       }
       emailDraft.current.body = value
+      setEmailStep('reply')
+      print({ text: t.emailReplyAsk, cls: 'accent' })
+    } else if (emailStep === 'reply') {
+      if (value && !/^\S+@\S+\.\S+$/.test(value)) {
+        print({ text: t.emailReplyInvalid, cls: 'warn' })
+        return
+      }
+      emailDraft.current.replyTo = value
       setEmailStep('confirm')
       print(
         { text: '' },
         { text: `  ${t.emailTo}:      ${profile.email}` },
         { text: `  ${t.emailSubject}: ${emailDraft.current.subject}` },
         { text: `  ${t.emailBody}:    ${emailDraft.current.body}` },
+        ...(value ? [{ text: `  Reply-to:  ${value}` }] : []),
         { text: '' },
       )
     } else if (emailStep === 'confirm') {
       if (t.yes.includes(value.toLowerCase())) {
-        const url = `mailto:${profile.email}?subject=${encodeURIComponent(
-          emailDraft.current.subject,
-        )}&body=${encodeURIComponent(emailDraft.current.body)}`
-        window.location.href = url
-        print({ text: t.emailSending, cls: 'ok' }, { text: '' })
+        print({ text: t.emailSending, cls: 'dim' })
+        const draft = {
+          subject: emailDraft.current.subject,
+          body: emailDraft.current.body,
+          replyTo: emailDraft.current.replyTo || undefined,
+        }
+        void sendEmail(draft, lang).then((ok) => {
+          if (ok) {
+            print({ text: t.emailSent, cls: 'ok' }, { text: '' })
+          } else {
+            // statische hosting of SMTP-storing: val terug op mailto
+            print({ text: t.emailFallback, cls: 'warn' }, { text: '' })
+            window.location.href = mailtoUrl(draft)
+          }
+        })
       } else {
         print({ text: t.emailCancelled, cls: 'dim' }, { text: '' })
       }

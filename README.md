@@ -17,9 +17,9 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | 3D | [Three.js](https://threejs.org) via [@react-three/fiber](https://github.com/pmndrs/react-three-fiber) + [@react-three/drei](https://github.com/pmndrs/drei) |
 | Terminal op het scherm | drei `<Html transform occlude>` + eigen React-component |
 | Live ISS-data | [wheretheiss.at API](https://wheretheiss.at/w/developer) (satelliet 25544, geen key nodig) |
-| E-mail | `mailto:` (geen backend) |
-| Scheepslogboek | zero-dependency Node-server (`server/server.js`) → publiek `/terminal.log` |
-| Hosting | DigitalOcean App Platform (zie hieronder) |
+| E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
+| Scheepslogboek | zero-dependency Node-server (`server/server.js`) → `/terminal.log` |
+| Hosting | Docker-container op TrueNAS, achter Nginx Proxy Manager (Let's Encrypt) |
 
 Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd
 — geen runtime-afhankelijkheden van externe CDN's behalve de ISS-API.
@@ -35,7 +35,7 @@ Klik op het MacBook-scherm en typ:
 | `whoami` | naam + titel |
 | `skills` | vaardigheden |
 | `contact` | e-mail & LinkedIn |
-| `email` | stuur een e-mail vanuit de terminal (onderwerp → bericht → bevestigen, opent je mailprogramma) |
+| `email` | stuur een e-mail vanuit de terminal (onderwerp → bericht → optioneel antwoordadres → bevestigen; verzonden via SMTP2GO) |
 | `photo` / `open arjan.jpg` | opent de foto op het bureaublad |
 | `linkedin` | opent het LinkedIn-profiel |
 | `iss` | live positie, hoogte en snelheid van het échte ISS |
@@ -62,8 +62,7 @@ npm run preview  # test de productiebuild lokaal
 - **Identiteit & links** — `src/config.ts` (naam, e-mail, LinkedIn, foto-pad).
 - **Teksten per taal** — `src/i18n.ts` (bio, titel, skills, alle UI- en
   terminalteksten; de TODO-markers wachten op echte content).
-- **Foto** — vervang `public/photo.svg` door een echte foto (vierkant werkt
-  het mooist) en pas `photo` in `src/config.ts` aan.
+- **Foto** — `public/photo.jpg` (vierkant, 800×800).
 - **Terminal-commando's** — `src/components/Terminal.tsx`.
 
 ### Taaldetectie
@@ -72,25 +71,55 @@ npm run preview  # test de productiebuild lokaal
 volgt de site de browsertaal. Overschrijven kan met `?lang=en|nl` in de URL
 of het `lang`-commando in de terminal (opgeslagen in localStorage).
 
-## Deployen op DigitalOcean App Platform
+## Deployen op TrueNAS (Docker + Nginx Proxy Manager)
 
-De app-spec staat in [`.do/app.yaml`](.do/app.yaml) en draait standaard als
-kleine **Node-service** (±$5/maand), zodat het scheepslogboek werkt. Wil je
-het zonder logboek gratis hosten, gebruik dan het `static_sites:`-blok dat
-als commentaar in de spec staat.
+De site draait als kleine, gehardende Docker-container
+([Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml)):
+multi-stage build (geen node_modules in het eindimage), draait als
+niet-root (uid 10001), `read_only` rootfs, alle capabilities gedropt,
+`no-new-privileges`, geheugen- en pids-limiet, en een healthcheck op
+`/healthz`. Alleen het `/data`-volume (scheepslogboek) is schrijfbaar.
 
-1. **Via het control panel**: [Apps → Create App](https://cloud.digitalocean.com/apps/new)
-   → GitHub → kies deze repo, branch `main`. Controleer: build command
-   `npm run build`, run command `node server/server.js`, poort 8080.
-2. **Of via de CLI**: `doctl apps create --spec .do/app.yaml`
-3. **Domeinen**: wijs de DNS van `arjankapteijn.nl` en `arjankapteijn.com`
-   naar DigitalOcean (CNAME naar de app-URL of nameservers naar DO DNS),
-   un-comment daarna het `domains:`-blok in `.do/app.yaml` en deploy opnieuw.
-   De taal van de site volgt automatisch het domein.
+### Eerste keer uitrollen
 
-Elke push naar `main` triggert daarna automatisch een nieuwe deploy.
-Lokaal de productieversie testen: `npm run build && npm start`
-(→ http://localhost:8080).
+```bash
+# op de TrueNAS-host (SSH), bijv. in /mnt/<pool>/apps:
+git clone https://github.com/arjankapteijn/website.git arjankapteijn
+cd arjankapteijn
+cp .env.example .env && nano .env   # SMTP2GO-wachtwoord invullen
+docker compose up -d --build
+curl http://localhost:8080/healthz  # → ok
+```
+
+(Op TrueNAS SCALE kan hetzelfde via Apps → *Install via YAML* met de
+inhoud van `docker-compose.yml`, maar git clone + compose is het
+makkelijkst bij te werken.)
+
+### Achter Nginx Proxy Manager (Let's Encrypt)
+
+1. NPM → **Hosts → Proxy Hosts → Add**:
+   domains `arjankapteijn.nl, www.arjankapteijn.nl`,
+   scheme `http`, forward host = IP van je TrueNAS, forward port `8080`.
+   Vink **Block Common Exploits** aan (websockets niet nodig).
+2. Tab **SSL**: *Request a new SSL certificate* (Let's Encrypt),
+   **Force SSL** + **HTTP/2** aan.
+3. Herhaal voor `arjankapteijn.com, www.arjankapteijn.com` (zelfde
+   forward) — de site toont dan automatisch Engels.
+4. DNS van beide domeinen → je publieke IP (A-record), en poort 80/443
+   geforward naar NPM.
+
+NPM stuurt `X-Forwarded-For` standaard mee, zodat de prompt en het
+logboek het echte bezoekers-IP zien.
+
+### Updaten
+
+```bash
+cd /mnt/<pool>/apps/arjankapteijn
+git pull && docker compose up -d --build
+```
+
+Het logboek in `./data/` blijft staan. Lokaal de productieversie testen:
+`npm run build && npm start` (→ http://localhost:8080).
 
 ## Live ISS-data
 
@@ -111,11 +140,25 @@ De site gebruikt `https://api.wheretheiss.at/v1/satellites/25544` (gratis,
 Valt de API weg, dan toont de HUD statische fallback-waarden en blijft de
 globe in de laatste stand staan.
 
-## Openbaar scheepslogboek
+## E-mail via SMTP2GO
+
+Het `email`-commando POST naar `/api/email`; `server/server.js` verstuurt
+de mail via SMTP2GO (impliciete TLS, poort 465) naar `MAIL_TO`. Het
+optionele antwoordadres van de bezoeker komt in de `Reply-To`-header,
+dus beantwoorden werkt gewoon vanuit je mailprogramma. Configuratie via
+`.env` (zie [.env.example](.env.example)); max. 4 mails per minuut per
+IP. Zonder SMTP-configuratie (of op statische hosting) valt de terminal
+automatisch terug op een `mailto:`-link.
+
+**Let op:** het `MAIL_FROM`-domein moet in SMTP2GO als sender domain
+geverifieerd zijn, en commit `.env` nooit (staat in `.gitignore`).
+
+## Scheepslogboek
 
 Alles wat bezoekers in de terminal typen wordt weggeschreven naar een plat
-logbestand, **nieuwste bovenaan**, publiek raadpleegbaar op **`/terminal.log`**
-(bijv. `https://arjankapteijn.nl/terminal.log`). Regelformaat:
+logbestand, **nieuwste bovenaan**, raadpleegbaar op **`/terminal.log`**
+(bijv. `https://arjankapteijn.nl/terminal.log` — bewust niet gelinkt of
+gemeld in de interface). Regelformaat:
 
 ```
 [2026-06-12 11:42:07 UTC] 86.82.x.x (nl) % neofetch
@@ -125,22 +168,17 @@ Hoe het werkt:
 
 - **Lokaal (`npm run dev`)** — een Vite-plugin (zie `vite.config.ts`)
   schrijft naar `public/terminal.log` (genegeerd door git).
-- **Productie (`npm run build && npm start`)** — `server/server.js`
-  (zero-dependency Node) serveert `dist/` én handelt `POST /api/log` af;
-  het logbestand leeft in `dist/terminal.log`. Max. 2000 regels,
+- **Productie** — `server/server.js` handelt `POST /api/log` af; het
+  logbestand leeft in `DATA_DIR` (in Docker het `/data`-volume, dus
+  persistent over herstarts en updates heen). Max. 2000 regels,
   30 posts/minuut per IP.
-- **Puur statische hosting** — geen server, dus geen logboek; de site
-  werkt verder gewoon en de opstartmelding verschijnt dan niet.
 
-Privacy: de bezoeker ziet zijn eigen volledige IP in de prompt, maar in het
-logboek wordt het **gemaskeerd** opgeslagen (`86.82.x.x`) en e-mailinhoud
-(onderwerp/bericht) wordt **nooit** gelogd. De terminal meldt het loggen
-zelf bij het opstarten. **Let op (AVG):** ook gemaskeerde IP's + tijdstippen
-kunnen persoonsgegevens zijn — vermeld het loggen in een privacyverklaring.
-En bedenk: wat bezoekers typen is publiek zichtbaar op `/terminal.log`.
-NB: op App Platform is het containerbestandssysteem niet persistent — het
-log wordt geleegd bij elke deploy. Voor een blijvend logboek: draai
-`server.js` op een Droplet of eigen server.
+Privacy: de bezoeker ziet zijn eigen volledige IP in de prompt, maar in
+het logboek wordt het **gemaskeerd** opgeslagen (`86.82.x.x`) en
+e-mailinhoud (onderwerp/bericht) wordt **nooit** gelogd. **Let op (AVG):**
+ook gemaskeerde IP's + tijdstippen kunnen persoonsgegevens zijn, en de
+interface meldt niet dát er gelogd wordt — vermeld dit dus zelf in een
+privacyverklaring.
 
 ## Credits & licenties
 

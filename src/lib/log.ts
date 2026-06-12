@@ -44,13 +44,3 @@ export function logCommand(command: string, lang: string): void {
     body: JSON.stringify({ command: command.slice(0, 200), lang }),
   }).catch(() => {})
 }
-
-/** Bestaat het logbestand? Bepaalt of de privacymelding bij het opstarten verschijnt. */
-export async function logAvailable(): Promise<boolean> {
-  try {
-    const res = await fetch(logging.file, { method: 'HEAD', cache: 'no-store' })
-    return res.ok
-  } catch {
-    return false
-  }
-}

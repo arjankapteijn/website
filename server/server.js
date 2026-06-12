@@ -1,22 +1,44 @@
-// Zero-dependency productieserver: serveert de gebouwde site uit dist/
-// en schrijft terminal-commando's naar het openbare scheepslogboek
-// (dist/terminal.log, nieuwste bovenaan, publiek op /terminal.log).
+// Zero-dependency productieserver:
+//   - serveert de gebouwde site uit dist/
+//   - POST /api/log    → scheepslogboek (nieuwste bovenaan, publiek op /terminal.log)
+//   - POST /api/email  → verstuurt e-mail via SMTP2GO (zie server/smtp.js)
+//   - GET  /healthz    → healthcheck voor Docker
 //
 //   npm run build && npm start
 //
-// IP-adressen worden gemaskeerd opgeslagen; e-mailinhoud bereikt dit
-// endpoint nooit (de client logt alleen getypte commando's).
+// Configuratie via environment (zie .env.example):
+//   PORT       (default 8080)
+//   DATA_DIR   map voor terminal.log (default: dist/) — mount in Docker
+//   SMTP_HOST  default mail-eu.smtp2go.com
+//   SMTP_PORT  default 465 (impliciete TLS)
+//   SMTP_USER / SMTP_PASS   zonder deze twee is /api/email uitgeschakeld
+//   MAIL_TO    default info@arjankapteijn.nl
+//   MAIL_FROM  default Station AK-01 <noreply@arjankapteijn.nl>
+//
+// IP-adressen worden gemaskeerd gelogd; e-mailinhoud bereikt het logboek nooit.
 
 import http from 'node:http'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { sendMail } from './smtp.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
-const LOG_FILE = path.join(DIST, 'terminal.log')
+const DATA_DIR = process.env.DATA_DIR || DIST
+const LOG_FILE = path.join(DATA_DIR, 'terminal.log')
 const PORT = Number(process.env.PORT) || 8080
 const MAX_LOG_LINES = 2000
-const RATE_LIMIT = 30 // posts per minuut per IP
+const LOG_RATE_LIMIT = 30 // posts per minuut per IP
+const MAIL_RATE_LIMIT = 4 // mails per minuut per IP
+
+const SMTP = {
+  host: process.env.SMTP_HOST || 'mail-eu.smtp2go.com',
+  port: Number(process.env.SMTP_PORT) || 465,
+  user: process.env.SMTP_USER || '',
+  pass: process.env.SMTP_PASS || '',
+  to: process.env.MAIL_TO || 'info@arjankapteijn.nl',
+  from: process.env.MAIL_FROM || 'Station AK-01 <noreply@arjankapteijn.nl>',
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -52,18 +74,37 @@ function maskIp(ip) {
   return `${parts[0]}.${parts[1]}.x.x`
 }
 
-// simpele rate limit per IP
+// simpele rate limit per IP per doel
 const buckets = new Map()
-function rateLimited(ip) {
+function rateLimited(key, limit) {
   const now = Date.now()
-  const b = buckets.get(ip)
+  const b = buckets.get(key)
   if (!b || now > b.reset) {
-    buckets.set(ip, { count: 1, reset: now + 60_000 })
+    buckets.set(key, { count: 1, reset: now + 60_000 })
     return false
   }
   b.count += 1
-  return b.count > RATE_LIMIT
+  return b.count > limit
 }
+
+async function readBody(req, res, maxBytes = 4096) {
+  let body = ''
+  for await (const chunk of req) {
+    body += chunk
+    if (body.length > maxBytes) {
+      res.writeHead(413).end()
+      return null
+    }
+  }
+  try {
+    return JSON.parse(body)
+  } catch {
+    res.writeHead(400).end()
+    return null
+  }
+}
+
+// ─── Scheepslogboek ─────────────────────────────────────────────────────
 
 // schrijfacties serialiseren zodat gelijktijdige posts elkaar niet overschrijven
 let writeQueue = Promise.resolve()
@@ -83,25 +124,12 @@ function appendLog(line) {
 
 async function handleLogPost(req, res) {
   const ip = clientIp(req)
-  if (rateLimited(ip)) {
+  if (rateLimited('log:' + ip, LOG_RATE_LIMIT)) {
     res.writeHead(429).end()
     return
   }
-  let body = ''
-  for await (const chunk of req) {
-    body += chunk
-    if (body.length > 2048) {
-      res.writeHead(413).end()
-      return
-    }
-  }
-  let parsed
-  try {
-    parsed = JSON.parse(body)
-  } catch {
-    res.writeHead(400).end()
-    return
-  }
+  const parsed = await readBody(req, res, 2048)
+  if (!parsed) return
   const command = String(parsed.command ?? '')
     .replace(/[\r\n\t]/g, ' ')
     .trim()
@@ -116,10 +144,69 @@ async function handleLogPost(req, res) {
   res.writeHead(204).end()
 }
 
+// ─── E-mail via SMTP2GO ─────────────────────────────────────────────────
+
+async function handleEmailPost(req, res) {
+  if (!SMTP.user || !SMTP.pass) {
+    res.writeHead(501).end() // niet geconfigureerd → client valt terug op mailto
+    return
+  }
+  const ip = clientIp(req)
+  if (rateLimited('mail:' + ip, MAIL_RATE_LIMIT)) {
+    res.writeHead(429).end()
+    return
+  }
+  const parsed = await readBody(req, res, 8192)
+  if (!parsed) return
+
+  const subject = String(parsed.subject ?? '').replace(/[\r\n]/g, ' ').trim().slice(0, 200)
+  const body = String(parsed.body ?? '').trim().slice(0, 4000)
+  const replyTo = String(parsed.replyTo ?? '').trim().slice(0, 200)
+  const lang = String(parsed.lang ?? '?').slice(0, 5)
+  if (!subject || !body || (replyTo && !/^\S+@\S+\.\S+$/.test(replyTo))) {
+    res.writeHead(400).end()
+    return
+  }
+
+  const text = [
+    body,
+    '',
+    '—',
+    `Verzonden via de terminal op arjankapteijn.nl/.com`,
+    `IP: ${ip} · taal: ${lang} · ${new Date().toISOString()}`,
+    replyTo ? `Antwoorden kan naar: ${replyTo}` : 'Geen antwoordadres opgegeven.',
+  ].join('\n')
+
+  try {
+    await sendMail({
+      host: SMTP.host,
+      port: SMTP.port,
+      user: SMTP.user,
+      pass: SMTP.pass,
+      from: SMTP.from,
+      to: SMTP.to,
+      subject: `[AK-01] ${subject}`,
+      text,
+      replyTo: replyTo || undefined,
+    })
+    res.writeHead(204).end()
+  } catch (err) {
+    console.error('e-mail mislukt:', err?.message ?? err)
+    res.writeHead(502).end()
+  }
+}
+
+// ─── Statische bestanden ────────────────────────────────────────────────
+
 async function serveStatic(req, res) {
   const url = new URL(req.url, 'http://localhost')
-  let filePath = path.normalize(path.join(DIST, decodeURIComponent(url.pathname)))
-  if (!filePath.startsWith(DIST)) {
+
+  // het logboek leeft in DATA_DIR (persistent volume in Docker)
+  let filePath =
+    url.pathname === '/terminal.log'
+      ? LOG_FILE
+      : path.normalize(path.join(DIST, decodeURIComponent(url.pathname)))
+  if (!filePath.startsWith(DIST) && filePath !== LOG_FILE) {
     res.writeHead(403).end()
     return
   }
@@ -127,6 +214,10 @@ async function serveStatic(req, res) {
     const stat = await fs.stat(filePath)
     if (stat.isDirectory()) filePath = path.join(filePath, 'index.html')
   } catch {
+    if (filePath === LOG_FILE) {
+      res.writeHead(404).end()
+      return
+    }
     filePath = path.join(DIST, 'index.html') // SPA-fallback
   }
   try {
@@ -144,6 +235,7 @@ async function serveStatic(req, res) {
 }
 
 // logbestand klaarzetten zodat het direct publiek bestaat
+await fs.mkdir(DATA_DIR, { recursive: true })
 try {
   await fs.access(LOG_FILE)
 } catch {
@@ -154,6 +246,10 @@ http
   .createServer((req, res) => {
     if (req.method === 'POST' && req.url === '/api/log') {
       handleLogPost(req, res).catch(() => res.writeHead(500).end())
+    } else if (req.method === 'POST' && req.url === '/api/email') {
+      handleEmailPost(req, res).catch(() => res.writeHead(500).end())
+    } else if (req.url === '/healthz') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
     } else if (req.method === 'GET' || req.method === 'HEAD') {
       serveStatic(req, res).catch(() => res.writeHead(500).end())
     } else {
