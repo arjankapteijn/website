@@ -15,11 +15,7 @@
 .screen-wrapper {
   width: 668px;
   height: 432px;
-  /* zoom verdubbelt de rasterresolutie bovenop de 2x-layout (samen 4x,
-     1336×864) en scale brengt het terug naar 334×216 — anders is de
-     tekst wazig op hidpi/retina-schermen */
-  zoom: 2;
-  transform: scale(0.25);
+  transform: scale(0.5);
   transform-origin: top left;
   font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   user-select: none;
