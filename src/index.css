@@ -220,6 +220,45 @@ canvas {
   background: rgba(70, 120, 255, 0.28);
 }
 
+/* ── Zonnepanelen-popup ─────────────────────────────────────────────── */
+.solar-modal__icon {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 44px;
+  border: 2px solid rgba(140, 175, 255, 0.35);
+  background: #1a2440;
+}
+
+.solar-stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 18px;
+  margin: 0 0 18px;
+  font-size: 12.5px;
+}
+
+.solar-stats dt {
+  color: rgba(160, 190, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  align-self: baseline;
+}
+
+.solar-stats dd {
+  margin: 0;
+  color: rgba(214, 224, 245, 0.92);
+}
+
+.solar-source {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(160, 190, 255, 0.5);
+}
+
 /* ── Hint onderin ───────────────────────────────────────────────────── */
 .hint {
   position: fixed;

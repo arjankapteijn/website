@@ -72,6 +72,21 @@
   opacity: 0.85;
 }
 
+/* de accu toont het live vermogen van de zonnepanelen en is klikbaar */
+.menubar-battery {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.menubar-battery:hover {
+  color: #ffe9b3;
+  text-shadow: 0 0 6px rgba(255, 220, 120, 0.6);
+}
+
 /* ── Bureaubladfoto ─────────────────────────────────────────────────── */
 .desktop-photo {
   position: absolute;
