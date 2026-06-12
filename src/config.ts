@@ -33,7 +33,7 @@ export const logging = {
 // zonnepanelen, server-side opgehaald bij SolarEdge (zie server/server.js).
 export const solar = {
   endpoint: '/api/solar',
-  inverter: 'SolarEdge',
+  inverter: 'SolarEdge HD-Wave 3000',
   panels: 9,
   panelType: 'Heckert NeMo 2.0',
   panelWatt: 300, // Wp per paneel
