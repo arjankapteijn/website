@@ -26,12 +26,24 @@ interactieve terminal, met de aarde en een ruimtestation op de achtergrond.
   delen).
 - **Tweetalig**: NL/EN op basis van domein (.nl → Nederlands, .com → Engels),
   te overschrijven met het `lang`-commando of `?lang=`.
-- **Live data**: hoogte/snelheid in de HUD komen van het echte ISS via de
-  wheretheiss.at API (satelliet 25544), met statische fallback-waarden.
+- **Live data**: hoogte/snelheid in de HUD, de ISS-marker op de globe én de
+  zonnestand (dag/nacht-grens) komen van het echte ISS via de wheretheiss.at
+  API (satelliet 25544), met statische fallback-waarden. De globe draait mee
+  met de ISS-positie.
+- **Bezoekers-IP**: de terminalprompt toont het IP van de bezoeker zelf
+  (api.ipify.org).
+- **Scheepslogboek**: getypte commando's gaan naar een plat logbestand,
+  nieuwste bovenaan, publiek op /terminal.log. Géén externe dienst (Arjan
+  wilde expliciet geen Supabase): lokaal schrijft een Vite-plugin naar
+  public/terminal.log, in productie doet server/server.js (zero-dependency
+  Node, serveert ook dist/) dat. IP's gemaskeerd, e-mailinhoud nooit gelogd.
+  Logboek hoeft niet in de site-interface te zien te zijn (geen log-commando).
 
 ## Openstaande punten voor Arjan
 
-- Bio, functietitel en skills invullen in `src/config.ts` (TODO-markers).
+- Bio verder aanvullen in `src/i18n.ts` (titel + skills staan er al, op
+  basis van LinkedIn: IT-consultant & softwaredeveloper bij ContactCare).
+- Loggen vermelden in een privacyverklaring (AVG).
 - `public/photo.svg` vervangen door een echte foto.
 - DNS van arjankapteijn.nl en arjankapteijn.com naar DigitalOcean wijzen en
   de domeinen activeren in `.do/app.yaml`.
