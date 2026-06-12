@@ -1,0 +1,42 @@
+# DigitalOcean App Platform spec
+# Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+#
+# Deployen kan op twee manieren:
+#   1. Control panel: Apps → Create App → GitHub → kies deze repo (branch main).
+#      App Platform herkent de Vite-site automatisch; controleer dat de
+#      build command `npm run build` is en de output directory `dist`.
+#   2. CLI: doctl apps create --spec .do/app.yaml
+#
+# Statische sites zijn gratis op App Platform (max. 3 per account).
+
+name: arjankapteijn
+region: ams
+
+static_sites:
+  - name: website
+    environment_slug: node-js
+    github:
+      repo: arjankapteijn/website
+      branch: main
+      deploy_on_push: true
+    build_command: npm run build
+    output_dir: dist
+    index_document: index.html
+    # SPA: alle routes naar index.html laten wijzen
+    catchall_document: index.html
+
+# Activeer de domeinen pas nadat de DNS van beide domeinen naar
+# DigitalOcean wijst (CNAME naar de standaard-app-URL, of NS naar
+# DigitalOcean DNS). Daarna onderstaande regels uncommenten en
+# opnieuw deployen — de taalkeuze van de site volgt het domein
+# (.nl = Nederlands, .com = Engels).
+#
+# domains:
+#   - domain: arjankapteijn.nl
+#     type: PRIMARY
+#   - domain: www.arjankapteijn.nl
+#     type: ALIAS
+#   - domain: arjankapteijn.com
+#     type: ALIAS
+#   - domain: www.arjankapteijn.com
+#     type: ALIAS
