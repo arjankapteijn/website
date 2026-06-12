@@ -35,7 +35,8 @@ function terminalLog(): Plugin {
             const clean = String(command).replace(/[\r\n\t]/g, ' ').trim().slice(0, 200)
             if (!clean) throw new Error('leeg')
             const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
-            const line = `[${stamp}] 127.0.x.x (${String(lang).slice(0, 5)}) % ${clean}`
+            const ip = (req.socket.remoteAddress || '?').replace(/^::ffff:/, '')
+            const line = `[${stamp}] ${ip} (${String(lang).slice(0, 5)}) % ${clean}`
             queue = queue.then(async () => {
               const existing = await fs.readFile(logFile, 'utf8').catch(() => '')
               await fs.writeFile(logFile, (line + '\n' + existing).split('\n').slice(0, 2000).join('\n'))

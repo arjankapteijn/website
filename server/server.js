@@ -15,7 +15,8 @@
 //   MAIL_TO    default info@arjankapteijn.nl
 //   MAIL_FROM  default Station AK-01 <noreply@arjankapteijn.nl>
 //
-// IP-adressen worden gemaskeerd gelogd; e-mailinhoud bereikt het logboek nooit.
+// Bezoekers-IP's staan onverkort in het openbare logboek (bewuste keuze);
+// e-mailinhoud bereikt het logboek nooit.
 
 import http from 'node:http'
 import { promises as fs } from 'node:fs'
@@ -93,15 +94,6 @@ function clientIp(req) {
   return raw.replace(/^::ffff:/, '')
 }
 
-function maskIp(ip) {
-  if (ip.includes(':')) {
-    const parts = ip.split(':')
-    return `${parts[0]}:${parts[1] ?? ''}:…`
-  }
-  const parts = ip.split('.')
-  return `${parts[0]}.${parts[1]}.x.x`
-}
-
 // simpele rate limit per IP per doel
 const buckets = new Map()
 function rateLimited(key, limit) {
@@ -168,7 +160,7 @@ async function handleLogPost(req, res) {
     return
   }
   const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
-  await appendLog(`[${stamp}] ${maskIp(ip)} (${lang}) % ${command}`)
+  await appendLog(`[${stamp}] ${ip} (${lang}) % ${command}`)
   res.writeHead(204).end()
 }
 

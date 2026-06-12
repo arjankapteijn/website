@@ -18,7 +18,7 @@ export function getIp(): Promise<string | null> {
   return ipPromise
 }
 
-/** Het volledige IP is alleen voor de bezoeker zelf zichtbaar (prompt). */
+/** Het IP van de bezoeker, getoond in de terminalprompt. */
 export function useIp(): string | null {
   const [ip, setIp] = useState<string | null>(cachedIp)
   useEffect(() => {
@@ -33,7 +33,7 @@ export function useIp(): string | null {
 
 // ─── Openbaar scheepslogboek ────────────────────────────────────────────
 // De server (of de Vite-plugin in dev) schrijft regels bovenaan een plat
-// logbestand en maskeert daarbij zelf het IP. Publiek raadpleegbaar op
+// logbestand, inclusief het volledige bezoekers-IP. Publiek raadpleegbaar op
 // logging.file (/terminal.log). Faalt stil: het logboek mag de site
 // nooit breken, en op statische hosting bestaat het endpoint simpelweg niet.
 
