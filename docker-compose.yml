@@ -8,7 +8,9 @@ services:
     container_name: arjankapteijn-website
     restart: unless-stopped
     ports:
-      - '8080:8080' # pas de host-poort aan als 8080 bezet is
+      # host-poort 8090 → container-poort 8080 (8080 is op TrueNAS vaak
+      # al bezet door een andere app); pas de linkerkant gerust aan
+      - '8090:8080'
     env_file: .env # SMTP-gegevens; zie .env.example
     volumes:
       - ./data:/data # persistent scheepslogboek (terminal.log)

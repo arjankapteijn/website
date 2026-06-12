@@ -88,7 +88,7 @@ git clone https://github.com/arjankapteijn/website.git arjankapteijn
 cd arjankapteijn
 cp .env.example .env && nano .env   # SMTP2GO-wachtwoord invullen
 docker compose up -d --build
-curl http://localhost:8080/healthz  # → ok
+curl http://localhost:8090/healthz  # → ok
 ```
 
 (Op TrueNAS SCALE kan hetzelfde via Apps → *Install via YAML* met de
@@ -99,7 +99,8 @@ makkelijkst bij te werken.)
 
 1. NPM → **Hosts → Proxy Hosts → Add**:
    domains `arjankapteijn.nl, www.arjankapteijn.nl`,
-   scheme `http`, forward host = IP van je TrueNAS, forward port `8080`.
+   scheme `http`, forward host = IP van je TrueNAS, forward port `8090`
+   (de host-poort uit `docker-compose.yml`).
    Vink **Block Common Exploits** aan (websockets niet nodig).
 2. Tab **SSL**: *Request a new SSL certificate* (Let's Encrypt),
    **Force SSL** + **HTTP/2** aan.
