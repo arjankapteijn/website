@@ -36,6 +36,10 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   const ip = useIp()
   const user = ip ?? (lang === 'nl' ? 'bezoeker' : 'visitor')
 
+  // bootregels staan los van de rest: de opstartanimatie zet steeds de
+  // eerste n regels (idempotent) zodat een dubbele effect-run — StrictMode
+  // of een Suspense-replay tijdens het 3D-laden — nooit dubbele regels geeft
+  const [bootLines, setBootLines] = useState<TermLine[]>([])
   const [lines, setLines] = useState<TermLine[]>([])
   const [input, setInput] = useState('')
   const [booted, setBooted] = useState(false)
@@ -51,12 +55,11 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
 
   // opstart-animatie (in de taal waarmee de pagina opent)
   useEffect(() => {
-    setLines([]) // voorkomt dubbele boot-regels bij StrictMode-remount in dev
     const boot = strings[initialLang.current].term.boot
     let i = 0
     const id = setInterval(() => {
-      setLines((prev) => [...prev, boot[i]])
       i += 1
+      setBootLines(boot.slice(0, i))
       if (i >= boot.length) {
         clearInterval(id)
         setBooted(true)
@@ -68,7 +71,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   // automatisch naar beneden scrollen
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight })
-  }, [lines])
+  }, [bootLines, lines])
 
   const print = (...newLines: TermLine[]) => setLines((prev) => [...prev, ...newLines])
 
@@ -286,6 +289,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         print(...t.exit)
         break
       case 'clear':
+        setBootLines([])
         setLines([])
         return
       default:
@@ -327,7 +331,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
 
   return (
     <div className="term-body" ref={bodyRef} onClick={() => inputRef.current?.focus()}>
-      {lines.map((line, i) => (
+      {[...bootLines, ...lines].map((line, i) => (
         <div key={i} className={`term-line${line?.cls ? ` term-line--${line.cls}` : ''}`}>
           {line?.text}
         </div>
