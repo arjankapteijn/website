@@ -216,6 +216,51 @@ async function handleEmailPost(req, res) {
   }
 }
 
+// ─── Zonnepanelen via SolarEdge ─────────────────────────────────────────
+// SolarEdge hanteert een daglimiet (~300 calls); de server cachet daarom
+// 5 minuten en de API-key blijft hier — nooit richting de browser.
+
+const SOLAR = {
+  key: process.env.SOLAREDGE_API_KEY || '',
+  site: process.env.SOLAREDGE_SITE_ID || '',
+  ttlMs: 5 * 60_000,
+}
+let solarCache = { at: 0, body: null }
+
+async function handleSolarGet(req, res) {
+  if (!SOLAR.key || !SOLAR.site) {
+    res.writeHead(501).end() // niet geconfigureerd → client toont statisch percentage
+    return
+  }
+  if (Date.now() - solarCache.at > SOLAR.ttlMs) {
+    try {
+      const r = await fetch(
+        `https://monitoringapi.solaredge.com/site/${SOLAR.site}/overview?api_key=${SOLAR.key}`,
+      )
+      if (!r.ok) throw new Error(`status ${r.status}`)
+      const { overview } = await r.json()
+      solarCache.body = JSON.stringify({
+        power: overview?.currentPower?.power ?? 0, // W
+        today: overview?.lastDayData?.energy ?? 0, // Wh
+        month: overview?.lastMonthData?.energy ?? 0,
+        lifetime: overview?.lifeTimeData?.energy ?? 0,
+        updatedAt: overview?.lastUpdateTime ?? null,
+      })
+      solarCache.at = Date.now()
+    } catch (err) {
+      console.error('solaredge mislukt:', err?.message ?? err)
+      if (!solarCache.body) {
+        res.writeHead(502).end()
+        return
+      }
+      solarCache.at = Date.now() // bij storing niet elke request opnieuw proberen
+    }
+  }
+  res
+    .writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' })
+    .end(solarCache.body)
+}
+
 // ─── Statische bestanden ────────────────────────────────────────────────
 
 async function serveStatic(req, res) {
@@ -269,6 +314,8 @@ http
       handleLogPost(req, res).catch(() => res.writeHead(500).end())
     } else if (req.method === 'POST' && req.url === '/api/email') {
       handleEmailPost(req, res).catch(() => res.writeHead(500).end())
+    } else if (req.method === 'GET' && req.url === '/api/solar') {
+      handleSolarGet(req, res).catch(() => res.writeHead(500).end())
     } else if (req.url === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
     } else if (req.method === 'GET' || req.method === 'HEAD') {

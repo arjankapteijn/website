@@ -3,6 +3,7 @@ import Terminal from './Terminal'
 import { profile } from '../config'
 import { strings, type Lang } from '../i18n'
 import { useIp } from '../lib/log'
+import { solarPercent, useSolar } from '../hooks/useSolar'
 import './screen.css'
 
 function MenuClock({ locale }: { locale: string }) {
@@ -29,6 +30,7 @@ interface ScreenProps {
 export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
   const t = strings[lang]
   const ip = useIp()
+  const solar = useSolar()
   return (
     <div className="screen-desktop">
       {/* macOS-menubalk */}
@@ -42,7 +44,18 @@ export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
         </div>
         <div className="screen-menubar__right">
           <span>📶</span>
-          <span>🔋 84%</span>
+          {solar ? (
+            // het accupercentage = live vermogen van de echte zonnepanelen
+            <button
+              className="menubar-battery"
+              title={t.solar.batteryTitle}
+              onClick={() => window.dispatchEvent(new Event('ak:open-solar'))}
+            >
+              🔋 {solarPercent(solar)}%
+            </button>
+          ) : (
+            <span>🔋 84%</span>
+          )}
           <MenuClock locale={t.locale} />
         </div>
       </div>

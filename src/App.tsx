@@ -3,12 +3,14 @@ import { Canvas } from '@react-three/fiber'
 import { Loader } from '@react-three/drei'
 import Scene from './components/Scene'
 import PhotoModal from './components/PhotoModal'
+import SolarModal from './components/SolarModal'
 import { profile } from './config'
 import { detectLang, saveLang, strings, type Lang } from './i18n'
 import { ISS_INTERVAL_MS, useIss } from './hooks/useIss'
 
 export default function App() {
   const [photoOpen, setPhotoOpen] = useState(false)
+  const [solarOpen, setSolarOpen] = useState(false)
   const [lang, setLangState] = useState<Lang>(() => detectLang())
   const iss = useIss()
   const t = strings[lang]
@@ -33,6 +35,13 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lang
   }, [lang])
+
+  // de accu in de menubalk (op het 3D-scherm) opent de zonnepanelen-popup
+  useEffect(() => {
+    const open = () => setSolarOpen(true)
+    window.addEventListener('ak:open-solar', open)
+    return () => window.removeEventListener('ak:open-solar', open)
+  }, [])
 
   const fmt = (n: number, digits = 0) =>
     n.toLocaleString(t.locale, { minimumFractionDigits: digits, maximumFractionDigits: digits })
@@ -95,6 +104,8 @@ export default function App() {
           }}
         />
       )}
+
+      {solarOpen && <SolarModal lang={lang} onClose={() => setSolarOpen(false)} />}
 
       {/* Voor zoekmachines en screenreaders */}
       <div className="visually-hidden">

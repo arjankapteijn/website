@@ -40,6 +40,23 @@ const nl = {
     'Procesoptimalisatie',
   ],
 
+  solar: {
+    title: 'Zonnepanelen',
+    subtitle: 'station ak-01 · energievoorziening',
+    batteryTitle: 'Accu — live gevoed door echte zonnepanelen (klik voor meer)',
+    intro:
+      'De accu van deze MacBook loopt op échte zonne-energie: het percentage in de menubalk is het actuele vermogen van mijn zonnepanelen thuis.',
+    current: 'huidig vermogen',
+    ofPeak: 'van piek',
+    today: 'opbrengst vandaag',
+    month: 'deze maand',
+    lifetime: 'totaal opgewekt',
+    system: 'installatie',
+    noData: 'Live-data is even niet beschikbaar — de zon schijnt vast ergens anders.',
+    source: 'bron: SolarEdge-monitoring',
+    updated: 'meting',
+  },
+
   hud: {
     station: 'station ak-01 · lage baan om de aarde',
     altitude: 'hoogte',
@@ -179,6 +196,23 @@ const en: typeof nl = {
     'AI integrations (incl. OpenAI)',
     'Process optimisation',
   ],
+
+  solar: {
+    title: 'Solar panels',
+    subtitle: 'station ak-01 · power supply',
+    batteryTitle: 'Battery — live powered by real solar panels (click for more)',
+    intro:
+      'This MacBook runs on real solar power: the percentage in the menu bar is the current output of my solar panels at home.',
+    current: 'current output',
+    ofPeak: 'of peak',
+    today: "today's yield",
+    month: 'this month',
+    lifetime: 'lifetime total',
+    system: 'system',
+    noData: 'Live data is unavailable right now — the sun must be shining elsewhere.',
+    source: 'source: SolarEdge monitoring',
+    updated: 'measured',
+  },
 
   hud: {
     station: 'station ak-01 · low earth orbit',
