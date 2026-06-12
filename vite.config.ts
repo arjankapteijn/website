@@ -53,7 +53,7 @@ function terminalLog(): Plugin {
 }
 
 // Dev-versie van /api/solar: zelfde gedrag als server/server.js — key uit
-// .env, 5 minuten cache (SolarEdge heeft een daglimiet), key blijft server-side.
+// .env, 15 minuten cache (SolarEdge heeft een daglimiet), key blijft server-side.
 function solarProxy(): Plugin {
   let cache = { at: 0, body: '' }
   return {
@@ -72,7 +72,7 @@ function solarProxy(): Plugin {
             res.statusCode = 501
             return res.end()
           }
-          if (Date.now() - cache.at > 5 * 60_000) {
+          if (Date.now() - cache.at > 15 * 60_000) {
             try {
               const r = await fetch(`https://monitoringapi.solaredge.com/site/${site}/overview?api_key=${key}`)
               if (!r.ok) throw new Error(`status ${r.status}`)

@@ -33,8 +33,9 @@ export const logging = {
 // zonnepanelen, server-side opgehaald bij SolarEdge (zie server/server.js).
 export const solar = {
   endpoint: '/api/solar',
+  inverter: 'SolarEdge',
   panels: 9,
-  panelType: 'Heckert Nemo 2.0',
+  panelType: 'Heckert NeMo 2.0',
   panelWatt: 300, // Wp per paneel
   peakWatt: 2700, // 9 × 300 Wp = 2,7 kWp
 }
