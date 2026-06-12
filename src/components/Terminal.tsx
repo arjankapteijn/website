@@ -2,24 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import { profile } from '../config'
 import { strings, type Lang, type TermLine } from '../i18n'
 import { fetchIss } from '../hooks/useIss'
+import { logAvailable, logCommand, useIp } from '../lib/log'
 
 type EmailStep = 'none' | 'subject' | 'body' | 'confirm'
 
+// Breedte vast op 20 tekens zodat de infokolom strak uitlijnt en de
+// regel (20 + 2 + ~24) binnen het terminalvenster past zonder te wrappen.
 const APPLE_ART = [
-  '                ###      ',
-  '              ####       ',
-  '             ###         ',
-  '     #######    #######  ',
-  '   ###################### ',
-  '  #####################  ',
-  '  ####################   ',
-  '  ####################   ',
-  '  #####################  ',
-  '   ###################### ',
-  '    ####################  ',
-  '      ################    ',
-  '       ####     ####      ',
-]
+  '         ##         ',
+  '       ###          ',
+  '      ##            ',
+  '  ####### #######   ',
+  ' ################## ',
+  '#################   ',
+  '################    ',
+  '################    ',
+  '#################   ',
+  ' ################## ',
+  '  ################  ',
+  '   ##############   ',
+  '    ####   ####     ',
+].map((l) => l.padEnd(20))
 
 interface TerminalProps {
   lang: Lang
@@ -29,7 +32,8 @@ interface TerminalProps {
 
 export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) {
   const t = strings[lang].term
-  const user = lang === 'nl' ? 'bezoeker' : 'visitor'
+  const ip = useIp()
+  const user = ip ?? (lang === 'nl' ? 'bezoeker' : 'visitor')
 
   const [lines, setLines] = useState<TermLine[]>([])
   const [input, setInput] = useState('')
@@ -44,19 +48,28 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   // de boot-taal is de taal op het moment van mounten
   const initialLang = useRef(lang)
 
-  // opstart-animatie (in de taal waarmee de pagina opent)
+  // opstart-animatie (in de taal waarmee de pagina opent); de
+  // privacymelding over het logboek verschijnt alleen als het logbestand
+  // op deze hosting echt bestaat
   useEffect(() => {
     setLines([]) // voorkomt dubbele boot-regels bij StrictMode-remount in dev
-    const boot = strings[initialLang.current].term.boot
+    const bootStrings = strings[initialLang.current].term
+    let boot = bootStrings.boot
     let i = 0
-    const id = setInterval(() => {
-      setLines((prev) => [...prev, boot[i]])
-      i += 1
-      if (i >= boot.length) {
-        clearInterval(id)
-        setBooted(true)
+    let id: ReturnType<typeof setInterval>
+    void logAvailable().then((available) => {
+      if (available) {
+        boot = [...boot.slice(0, -1), { text: bootStrings.bootLogNotice, cls: 'dim' }, { text: '' }]
       }
-    }, 220)
+      id = setInterval(() => {
+        setLines((prev) => [...prev, boot[i]])
+        i += 1
+        if (i >= boot.length) {
+          clearInterval(id)
+          setBooted(true)
+        }
+      }, 220)
+    })
     return () => clearInterval(id)
   }, [])
 
@@ -150,11 +163,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         print(...profileStrings.bio.map((text) => ({ text })), { text: '' })
         break
       case 'whoami':
-        print(
-          { text: `${profile.name} — ${profileStrings.title}`, cls: 'accent' },
-          { text: profileStrings.location },
-          { text: '' },
-        )
+        print({ text: t.whoamiYou(ip), cls: 'accent' }, { text: '' })
         break
       case 'skills':
         print(
@@ -200,6 +209,9 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         break
       case 'iss':
         void showIss()
+        break
+      case 'fortune':
+        print({ text: t.fortune, cls: 'accent' }, { text: '' })
         break
       case 'lang':
       case 'language':
@@ -261,11 +273,13 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
       setInput('')
       print({ text: prompt + value, cls: 'cmd' })
       if (emailStep !== 'none') {
+        // e-mailinhoud wordt bewust nooit gelogd (privacy)
         runEmailStep(value.trim())
       } else {
         if (value.trim()) {
           history.current.push(value)
           historyIdx.current = history.current.length
+          logCommand(value.trim(), lang)
         }
         run(value)
       }

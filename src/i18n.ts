@@ -24,17 +24,21 @@ export function saveLang(lang: Lang) {
 
 const nl = {
   locale: 'nl-NL',
-  title: 'Maker van digitale dingen', // TODO: jouw functietitel
+  title: 'IT-consultant & softwaredeveloper',
   location: 'Nederland',
   // TODO: schrijf hier je eigen bio
   bio: [
-    'Hoi! Ik ben Arjan Kapteijn.',
+    'Hoi! Ik ben Arjan Kapteijn, IT-consultant en softwaredeveloper.',
     'Welkom aan boord van mijn persoonlijke ruimtestation.',
     'Hier vertel ik binnenkort meer over wie ik ben en wat ik doe.',
     'Tot die tijd: kijk gerust rond, of stuur me een bericht.',
   ],
-  // TODO: vul je eigen skills in
-  skills: ['Klantcontact & CX', 'Procesoptimalisatie', 'Technologie & tooling', 'Team leadership'],
+  skills: [
+    'PHP & Laravel-development',
+    "API's & systeemkoppelingen",
+    'AI-integraties (o.a. OpenAI)',
+    'Procesoptimalisatie',
+  ],
 
   hud: {
     station: 'station ak-01 · lage baan om de aarde',
@@ -134,32 +138,42 @@ const nl = {
     skillsHeader: 'Skills:',
     contactTip: "Tip: typ 'email' om direct vanuit de terminal te mailen.",
     neofetchLines: [
-      'Host: MacBook Pro 16" (M1 Max)',
-      'Chip: Apple M1 Max · 10-core',
-      'Geheugen: 64 GB unified',
-      'OS: AK-OS 1.0 (macOS-compatibel)',
+      'Host: MacBook Pro M1 Max',
+      'Chip: M1 Max · 10-core',
+      'RAM: 64 GB unified',
+      'OS: AK-OS 1.0',
       'Shell: zsh 5.9',
-      'Locatie: ±420 km boven zeeniveau',
+      'Hoogte: ±420 km',
       'Snelheid: ±27.500 km/u',
       'Uptime: sinds lancering',
       'Zwaartekracht: n.v.t.',
     ],
+    whoamiYou: (ip: string | null) =>
+      ip
+        ? `Jij bent ${ip} — maar deze site gaat over Arjan Kapteijn 😉 (typ 'about')`
+        : "Een bezoeker zonder naam. Deze site gaat over Arjan Kapteijn — typ 'about'.",
+    bootLogNotice: "ℹ️  Commando's worden bijgehouden in het scheepslogboek (/terminal.log).",
+    fortune: 'A SQL query walks into a bar. He approaches two tables and says: "Mind if I join you?"',
   },
 }
 
 const en: typeof nl = {
   locale: 'en-GB',
-  title: 'Maker of digital things', // TODO: your job title
+  title: 'IT consultant & software developer',
   location: 'The Netherlands',
   // TODO: write your own bio
   bio: [
-    "Hi! I'm Arjan Kapteijn.",
+    "Hi! I'm Arjan Kapteijn, IT consultant and software developer.",
     'Welcome aboard my personal space station.',
     "Soon I'll share more here about who I am and what I do.",
     'Until then: feel free to look around, or send me a message.',
   ],
-  // TODO: fill in your own skills
-  skills: ['Customer contact & CX', 'Process optimisation', 'Technology & tooling', 'Team leadership'],
+  skills: [
+    'PHP & Laravel development',
+    'APIs & system integrations',
+    'AI integrations (incl. OpenAI)',
+    'Process optimisation',
+  ],
 
   hud: {
     station: 'station ak-01 · low earth orbit',
@@ -258,16 +272,22 @@ const en: typeof nl = {
     skillsHeader: 'Skills:',
     contactTip: "Tip: type 'email' to send a mail straight from the terminal.",
     neofetchLines: [
-      'Host: MacBook Pro 16" (M1 Max)',
-      'Chip: Apple M1 Max · 10-core',
-      'Memory: 64 GB unified',
-      'OS: AK-OS 1.0 (macOS-compatible)',
+      'Host: MacBook Pro M1 Max',
+      'Chip: M1 Max · 10-core',
+      'RAM: 64 GB unified',
+      'OS: AK-OS 1.0',
       'Shell: zsh 5.9',
-      'Location: ±420 km above sea level',
+      'Altitude: ±420 km',
       'Velocity: ±27,500 km/h',
       'Uptime: since launch',
       'Gravity: n/a',
     ],
+    whoamiYou: (ip: string | null) =>
+      ip
+        ? `You are ${ip} — but this site is about Arjan Kapteijn 😉 (type 'about')`
+        : "A nameless visitor. This site is about Arjan Kapteijn — type 'about'.",
+    bootLogNotice: "ℹ️  Commands are recorded in the ship's log (/terminal.log).",
+    fortune: 'A SQL query walks into a bar. He approaches two tables and says: "Mind if I join you?"',
   },
 }
 

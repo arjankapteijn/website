@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Terminal from './Terminal'
 import { profile } from '../config'
 import { strings, type Lang } from '../i18n'
+import { useIp } from '../lib/log'
 import './screen.css'
 
 function MenuClock({ locale }: { locale: string }) {
@@ -27,6 +28,7 @@ interface ScreenProps {
 
 export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
   const t = strings[lang]
+  const ip = useIp()
   return (
     <div className="screen-desktop">
       {/* macOS-menubalk */}
@@ -57,7 +59,7 @@ export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
           <span className="term-dot term-dot--red" />
           <span className="term-dot term-dot--yellow" />
           <span className="term-dot term-dot--green" />
-          <span className="term-title">{lang === 'nl' ? 'bezoeker' : 'visitor'}@ak-01 — zsh</span>
+          <span className="term-title">{ip ?? (lang === 'nl' ? 'bezoeker' : 'visitor')}@ak-01 — zsh</span>
         </div>
         <Terminal lang={lang} setLang={setLang} onOpenPhoto={onOpenPhoto} />
       </div>

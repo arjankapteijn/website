@@ -18,7 +18,8 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | Terminal op het scherm | drei `<Html transform occlude>` + eigen React-component |
 | Live ISS-data | [wheretheiss.at API](https://wheretheiss.at/w/developer) (satelliet 25544, geen key nodig) |
 | E-mail | `mailto:` (geen backend) |
-| Hosting | DigitalOcean App Platform (statische site, zie hieronder) |
+| Scheepslogboek | zero-dependency Node-server (`server/server.js`) → publiek `/terminal.log` |
+| Hosting | DigitalOcean App Platform (zie hieronder) |
 
 Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd
 — geen runtime-afhankelijkheden van externe CDN's behalve de ISS-API.
@@ -73,12 +74,14 @@ of het `lang`-commando in de terminal (opgeslagen in localStorage).
 
 ## Deployen op DigitalOcean App Platform
 
-De app-spec staat in [`.do/app.yaml`](.do/app.yaml). Statische sites zijn
-gratis op App Platform (max. 3 per account).
+De app-spec staat in [`.do/app.yaml`](.do/app.yaml) en draait standaard als
+kleine **Node-service** (±$5/maand), zodat het scheepslogboek werkt. Wil je
+het zonder logboek gratis hosten, gebruik dan het `static_sites:`-blok dat
+als commentaar in de spec staat.
 
 1. **Via het control panel**: [Apps → Create App](https://cloud.digitalocean.com/apps/new)
    → GitHub → kies deze repo, branch `main`. Controleer: build command
-   `npm run build`, output directory `dist`. Deploy.
+   `npm run build`, run command `node server/server.js`, poort 8080.
 2. **Of via de CLI**: `doctl apps create --spec .do/app.yaml`
 3. **Domeinen**: wijs de DNS van `arjankapteijn.nl` en `arjankapteijn.com`
    naar DigitalOcean (CNAME naar de app-URL of nameservers naar DO DNS),
@@ -86,6 +89,8 @@ gratis op App Platform (max. 3 per account).
    De taal van de site volgt automatisch het domein.
 
 Elke push naar `main` triggert daarna automatisch een nieuwe deploy.
+Lokaal de productieversie testen: `npm run build && npm start`
+(→ http://localhost:8080).
 
 ## Live ISS-data
 
@@ -105,6 +110,37 @@ De site gebruikt `https://api.wheretheiss.at/v1/satellites/25544` (gratis,
 
 Valt de API weg, dan toont de HUD statische fallback-waarden en blijft de
 globe in de laatste stand staan.
+
+## Openbaar scheepslogboek
+
+Alles wat bezoekers in de terminal typen wordt weggeschreven naar een plat
+logbestand, **nieuwste bovenaan**, publiek raadpleegbaar op **`/terminal.log`**
+(bijv. `https://arjankapteijn.nl/terminal.log`). Regelformaat:
+
+```
+[2026-06-12 11:42:07 UTC] 86.82.x.x (nl) % neofetch
+```
+
+Hoe het werkt:
+
+- **Lokaal (`npm run dev`)** — een Vite-plugin (zie `vite.config.ts`)
+  schrijft naar `public/terminal.log` (genegeerd door git).
+- **Productie (`npm run build && npm start`)** — `server/server.js`
+  (zero-dependency Node) serveert `dist/` én handelt `POST /api/log` af;
+  het logbestand leeft in `dist/terminal.log`. Max. 2000 regels,
+  30 posts/minuut per IP.
+- **Puur statische hosting** — geen server, dus geen logboek; de site
+  werkt verder gewoon en de opstartmelding verschijnt dan niet.
+
+Privacy: de bezoeker ziet zijn eigen volledige IP in de prompt, maar in het
+logboek wordt het **gemaskeerd** opgeslagen (`86.82.x.x`) en e-mailinhoud
+(onderwerp/bericht) wordt **nooit** gelogd. De terminal meldt het loggen
+zelf bij het opstarten. **Let op (AVG):** ook gemaskeerde IP's + tijdstippen
+kunnen persoonsgegevens zijn — vermeld het loggen in een privacyverklaring.
+En bedenk: wat bezoekers typen is publiek zichtbaar op `/terminal.log`.
+NB: op App Platform is het containerbestandssysteem niet persistent — het
+log wordt geleegd bij elke deploy. Voor een blijvend logboek: draai
+`server.js` op een Droplet of eigen server.
 
 ## Credits & licenties
 

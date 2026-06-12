@@ -1,18 +1,24 @@
 # DigitalOcean App Platform spec
 # Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
 #
-# Deployen kan op twee manieren:
-#   1. Control panel: Apps → Create App → GitHub → kies deze repo (branch main).
-#      App Platform herkent de Vite-site automatisch; controleer dat de
-#      build command `npm run build` is en de output directory `dist`.
+# Deployen:
+#   1. Control panel: Apps → Create App → GitHub → kies deze repo (branch main),
+#      of importeer deze spec.
 #   2. CLI: doctl apps create --spec .do/app.yaml
 #
-# Statische sites zijn gratis op App Platform (max. 3 per account).
+# De app draait als kleine Node-service (±$5/maand) zodat het openbare
+# scheepslogboek (/terminal.log) kan worden geschreven door server/server.js.
+# Let op: het logbestand leeft in de container en wordt geleegd bij elke
+# deploy/herstart. Wil je het logboek permanent bewaren, draai de site dan
+# op een Droplet (zelfde server.js, wel persistent).
+#
+# Geen logboek nodig? Comment de `services:` uit en gebruik het
+# `static_sites:`-blok onderaan — dat is gratis.
 
 name: arjankapteijn
 region: ams
 
-static_sites:
+services:
   - name: website
     environment_slug: node-js
     github:
@@ -20,10 +26,24 @@ static_sites:
       branch: main
       deploy_on_push: true
     build_command: npm run build
-    output_dir: dist
-    index_document: index.html
-    # SPA: alle routes naar index.html laten wijzen
-    catchall_document: index.html
+    run_command: node server/server.js
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+
+# Gratis statisch alternatief (zonder scheepslogboek):
+#
+# static_sites:
+#   - name: website
+#     environment_slug: node-js
+#     github:
+#       repo: arjankapteijn/website
+#       branch: main
+#       deploy_on_push: true
+#     build_command: npm run build
+#     output_dir: dist
+#     index_document: index.html
+#     catchall_document: index.html
 
 # Activeer de domeinen pas nadat de DNS van beide domeinen naar
 # DigitalOcean wijst (CNAME naar de standaard-app-URL, of NS naar
