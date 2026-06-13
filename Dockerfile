@@ -1,5 +1,5 @@
 # ── Build ───────────────────────────────────────────────────────────────
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -10,7 +10,7 @@ RUN npm run build
 # Alleen de gebouwde site + de zero-dependency server; geen npm, geen
 # node_modules. Draait als niet-root; bestandssysteem kan read-only
 # (het logboek schrijft naar het /data-volume).
-FROM node:22-alpine
+FROM node:24-alpine
 RUN apk add --no-cache wget \
   && addgroup -g 10001 app \
   && adduser -D -u 10001 -G app app \
