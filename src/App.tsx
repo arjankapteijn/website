@@ -107,13 +107,13 @@ export default function App() {
 
       {solarOpen && <SolarModal lang={lang} onClose={() => setSolarOpen(false)} />}
 
-      {/* Voor zoekmachines en screenreaders */}
-      <div className="visually-hidden">
+      {/* Voor zoekmachines en screenreaders — tevens het main-landmark */}
+      <main className="visually-hidden">
         <h1>{profile.name}</h1>
         <p>{t.bio.join(' ')}</p>
         <a href={profile.linkedin}>LinkedIn — {profile.name}</a>
         <a href={`mailto:${profile.email}`}>E-mail — {profile.name}</a>
-      </div>
+      </main>
     </>
   )
 }
