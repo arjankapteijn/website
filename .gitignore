@@ -35,3 +35,4 @@ data/
 
 # Interne projectnotities (lokaal houden, niet publiceren)
 MEMORY.md
+docs/tls-sha224-plan.md
