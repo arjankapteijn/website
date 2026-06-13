@@ -8,7 +8,6 @@ const b64 = (s) => Buffer.from(s, 'utf8').toString('base64')
 
 /** Onderwerp met niet-ASCII tekens veilig encoderen (RFC 2047). */
 function encodeHeader(value) {
-  // eslint-disable-next-line no-control-regex
   return /^[\x20-\x7e]*$/.test(value) ? value : `=?UTF-8?B?${b64(value)}?=`
 }
 
