@@ -32,3 +32,6 @@ public/terminal.log
 # Secrets en lokale data
 .env
 data/
+
+# Interne projectnotities (lokaal houden, niet publiceren)
+MEMORY.md
