@@ -69,9 +69,9 @@ export default function App() {
         {t.hud.altitude} {altitude} km
         <br />
         {t.hud.speed} {velocity} {t.hud.perHour}
-        {iss && (
+        <br />
+        {iss ? (
           <>
-            <br />
             {iss.latitude.toFixed(1)}° {iss.longitude.toFixed(1)}° ·{' '}
             {iss.visibility === 'daylight' ? `☀ ${t.hud.daylight}` : `● ${t.hud.eclipsed}`}
             <br />
@@ -79,6 +79,8 @@ export default function App() {
               {t.hud.live} · {t.hud.nextUpdate} {String(nextIn).padStart(2, '0')}s
             </span>
           </>
+        ) : (
+          <span className="hud-live hud-live--connecting">{t.hud.connecting}</span>
         )}
       </div>
       <div className="hud hud--bl">{t.hud.gravity}</div>

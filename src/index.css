@@ -79,6 +79,11 @@ canvas {
   animation: pulse 2.4s ease-in-out infinite;
 }
 
+/* nog geen ISS-data binnen: zacht-blauw pulserend i.p.v. live-groen */
+.hud-live--connecting {
+  color: rgba(150, 185, 255, 0.8);
+}
+
 /* Smal scherm: de ISS-data rechtsboven past niet meer naast de naam */
 @media (max-width: 640px) {
   .hud--tr { display: none; }
