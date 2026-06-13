@@ -16,7 +16,7 @@ const VIEW_ELEVATION =
   Math.atan2(1.5 - EARTH_POS[1], Math.hypot(0 - EARTH_POS[0], 24 - EARTH_POS[2])) + 0.27
 
 /** Zet breedte-/lengtegraad om naar een punt op de bol (three.js equirect-mapping). */
-export function latLonToVec3(lat: number, lon: number, radius: number): THREE.Vector3 {
+function latLonToVec3(lat: number, lon: number, radius: number): THREE.Vector3 {
   const phi = THREE.MathUtils.degToRad(90 - lat)
   const theta = THREE.MathUtils.degToRad(lon + 180)
   return new THREE.Vector3(
@@ -56,8 +56,11 @@ export default function Earth({ iss }: { iss: IssData | null }) {
     '/textures/earth_specular.webp',
     '/textures/earth_clouds.webp',
   ])
+  /* eslint-disable react-hooks/immutability -- three.js-idioom: de colorspace
+     op een geladen texture zetten is hoe drei/three dit voorschrijven */
   map.colorSpace = THREE.SRGBColorSpace
   cloudsMap.colorSpace = THREE.SRGBColorSpace
+  /* eslint-enable react-hooks/immutability */
 
   // Echte zonnestand (sub-solair punt) → de dag/nacht-grens klopt met nu.
   const sunPos = iss ? latLonToVec3(iss.solar_lat, iss.solar_lon, 90) : latLonToVec3(23, 30, 90)
@@ -71,6 +74,7 @@ export default function Earth({ iss }: { iss: IssData | null }) {
   // Spoor van eerdere ISS-posities
   useEffect(() => {
     if (!iss) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- het spoor groeit bewust met elke nieuwe ISS-meting
     setTrail((prev) => [...prev, latLonToVec3(iss.latitude, iss.longitude, RADIUS + 0.4)].slice(-120))
   }, [iss])
 
