@@ -66,8 +66,9 @@ const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  // TLS termineert bij de reverse proxy; over plain http negeren browsers dit
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  // HSTS bewust NIET hier: TLS termineert bij Nginx Proxy Manager, en die zet
+  // de Strict-Transport-Security-header al. Hier óók zetten = dubbele header
+  // (browsers negeren 'm dan; SSL Labs markeert het als invalid).
 }
 
 const MIME = {
