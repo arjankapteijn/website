@@ -48,7 +48,7 @@ export default function Scene({ lang, setLang, onOpenPhoto, iss }: SceneProps) {
       </group>
 
       {/* Lokale HDR voor realistische reflecties in het aluminium */}
-      <Environment files="/textures/potsdamer_platz_1k.hdr" />
+      <Environment files="/textures/potsdamer_platz_512.hdr" />
 
       <OrbitControls
         target={[0, 0, 0]}

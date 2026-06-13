@@ -51,10 +51,10 @@ export default function Earth({ iss }: { iss: IssData | null }) {
   const [trail, setTrail] = useState<THREE.Vector3[]>([])
 
   const [map, normalMap, specularMap, cloudsMap] = useTexture([
-    '/textures/earth_atmos_2048.jpg',
-    '/textures/earth_normal_2048.jpg',
-    '/textures/earth_specular_2048.jpg',
-    '/textures/earth_clouds_1024.png',
+    '/textures/earth_atmos.webp',
+    '/textures/earth_normal.webp',
+    '/textures/earth_specular.webp',
+    '/textures/earth_clouds.webp',
   ])
   map.colorSpace = THREE.SRGBColorSpace
   cloudsMap.colorSpace = THREE.SRGBColorSpace

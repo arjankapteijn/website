@@ -10,7 +10,7 @@ export const profile = {
 
   linkedin: 'https://www.linkedin.com/in/arjankapteijn/',
 
-  photo: '/photo.jpg',
+  photo: '/photo.webp',
 }
 
 // E-mail wordt server-side verstuurd via SMTP2GO (zie server/server.js);
