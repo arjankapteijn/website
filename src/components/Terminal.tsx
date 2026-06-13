@@ -281,7 +281,16 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         print({ text: t.pwd }, { text: '' })
         break
       case 'sudo':
-        print(...t.sudo)
+        // easter-egg: sudo ontgrendelt het 'geheime' bestand
+        if (arg === 'cat .geheimen' || arg === 'cat .secrets') {
+          print(...t.catSecretUnlocked)
+        } else {
+          print(...t.sudo)
+        }
+        break
+      case 'coffee':
+      case 'koffie':
+        print(...t.coffee)
         break
       case 'exit':
       case 'logout':

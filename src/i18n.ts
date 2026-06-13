@@ -148,6 +148,28 @@ const nl = {
       { text: 'Dit incident wordt gerapporteerd aan Houston. 🛰️', cls: 'dim' },
       { text: '' },
     ] as TermLine[],
+    // easter-egg: 'sudo cat .geheimen' ontgrendelt het 'geheim'
+    catSecretUnlocked: [
+      { text: 'Toegang verleend. 🔓', cls: 'ok' },
+      { text: '' },
+      { text: 'Het best bewaarde geheim van station AK-01:', cls: 'accent' },
+      { text: 'het is tijd voor een biertje. 🍺', cls: 'accent' },
+      { text: '' },
+      { text: 'Proost — en bedankt voor het rondsnuffelen.', cls: 'dim' },
+      { text: '' },
+    ] as TermLine[],
+    // easter-egg: 'coffee' / 'koffie' (callback op 'koffie aan boord')
+    coffee: [
+      { text: '        ( (', cls: 'dim' },
+      { text: '         ) )', cls: 'dim' },
+      { text: '      ........', cls: 'accent' },
+      { text: '      |      |]', cls: 'accent' },
+      { text: '      \\      /', cls: 'accent' },
+      { text: "       `----'", cls: 'accent' },
+      { text: '' },
+      { text: 'Verse bak gezet. Stationsmoraal +10. ☕', cls: 'ok' },
+      { text: '' },
+    ] as TermLine[],
     exit: [
       { text: 'Ontsnappen aan een baan om de aarde kost 7,9 km/s.', cls: 'warn' },
       { text: "Makkelijker: typ 'linkedin'.", cls: 'dim' },
@@ -302,6 +324,28 @@ const en: typeof nl = {
     sudo: [
       { text: 'visitor is not in the sudoers file.', cls: 'err' },
       { text: 'This incident will be reported to Houston. 🛰️', cls: 'dim' },
+      { text: '' },
+    ],
+    // easter-egg: 'sudo cat .secrets' unlocks the 'secret'
+    catSecretUnlocked: [
+      { text: 'Access granted. 🔓', cls: 'ok' },
+      { text: '' },
+      { text: "Station AK-01's best-kept secret:", cls: 'accent' },
+      { text: "it's time for a beer. 🍺", cls: 'accent' },
+      { text: '' },
+      { text: 'Cheers — and thanks for snooping around.', cls: 'dim' },
+      { text: '' },
+    ],
+    // easter-egg: 'coffee' / 'koffie' (callback to 'coffee on board')
+    coffee: [
+      { text: '        ( (', cls: 'dim' },
+      { text: '         ) )', cls: 'dim' },
+      { text: '      ........', cls: 'accent' },
+      { text: '      |      |]', cls: 'accent' },
+      { text: '      \\      /', cls: 'accent' },
+      { text: "       `----'", cls: 'accent' },
+      { text: '' },
+      { text: 'Fresh brew poured. Station morale +10. ☕', cls: 'ok' },
       { text: '' },
     ],
     exit: [
