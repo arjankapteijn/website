@@ -149,7 +149,6 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
     }
     print(
       { text: `${t.emailIntro} ${profile.email}`, cls: 'accent' },
-      { text: t.emailPrivacy, cls: 'warn' },
       { text: t.emailSubjectAsk, cls: 'dim' },
     )
     setEmailStep('subject')
