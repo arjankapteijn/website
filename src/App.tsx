@@ -84,7 +84,7 @@ export default function App() {
       <div className="hud hud--bl">{t.hud.gravity}</div>
       <div className="hud hud--br">
         <a href={profile.linkedin} target="_blank" rel="noreferrer">
-          linkedin
+          LinkedIn
         </a>
       </div>
 
