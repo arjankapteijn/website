@@ -27,6 +27,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # @types/node volgt de Node-runtime (LTS) uit de Dockerfile; geen PR's
+    # naar een hogere (non-LTS) major. Lift dit als je Node naar de volgende
+    # LTS tilt, en bump @types/node dan mee.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # ── Docker base-image (node:22-alpine) ───────────────────────────────
   - package-ecosystem: "docker"
@@ -43,7 +49,21 @@ updates:
     commit-message:
       prefix: "docker"
     # blijf op de gekozen Node-LTS-major; geen PR's die naar een nieuwe
-    # major (23/24/…) duwen. Haal dit blok weg als je die juist wél wilt.
+    # major (25/26/…) duwen. Haal dit blok weg als je die juist wél wilt.
     ignore:
       - dependency-name: "node"
         update-types: ["version-update:semver-major"]
+
+  # ── GitHub Actions (CI-workflow) ─────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"

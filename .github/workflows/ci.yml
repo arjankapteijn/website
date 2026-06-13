@@ -1,0 +1,30 @@
+name: CI
+
+# Lint + build op elke push naar main en op elke PR (incl. Dependabot),
+# zodat dependency-PR's meteen groen/rood tonen. Draait op ubuntu (1×-tarief)
+# en bewaart geen artifacts → blijft binnen het gratis Actions-tegoed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# nieuwe push op dezelfde branch annuleert een nog lopende run (scheelt minuten)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # gelijk aan de runtime in de Dockerfile
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
