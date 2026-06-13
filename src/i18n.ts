@@ -155,7 +155,8 @@ const nl = {
       { text: 'Het best bewaarde geheim van station AK-01:', cls: 'accent' },
       { text: 'het is tijd voor een biertje. 🍺', cls: 'accent' },
       { text: '' },
-      { text: 'Proost — en bedankt voor het rondsnuffelen.', cls: 'dim' },
+      { text: 'Jij hebt zó ver gezocht — dat verdient een échte, op aarde.', cls: 'dim' },
+      { text: "Typ 'email' en we plannen er eentje. 🌍🍻", cls: 'ok' },
       { text: '' },
     ] as TermLine[],
     // easter-egg: 'coffee' / 'koffie' (callback op 'koffie aan boord')
@@ -333,7 +334,8 @@ const en: typeof nl = {
       { text: "Station AK-01's best-kept secret:", cls: 'accent' },
       { text: "it's time for a beer. 🍺", cls: 'accent' },
       { text: '' },
-      { text: 'Cheers — and thanks for snooping around.', cls: 'dim' },
+      { text: 'You dug this deep — that earns a real one, back on Earth.', cls: 'dim' },
+      { text: "Type 'email' and let's plan it. 🌍🍻", cls: 'ok' },
       { text: '' },
     ],
     // easter-egg: 'coffee' / 'koffie' (callback to 'coffee on board')
