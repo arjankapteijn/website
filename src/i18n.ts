@@ -42,7 +42,7 @@ const nl = {
 
   solar: {
     title: 'Zonnepanelen',
-    subtitle: 'station ak-01 · energievoorziening',
+    subtitle: 'station AK-01 · energievoorziening',
     batteryTitle: 'Accu — live gevoed door echte zonnepanelen (klik voor meer)',
     intro:
       'De accu van deze MacBook loopt op échte zonne-energie: het percentage in de menubalk is het actuele vermogen van mijn zonnepanelen thuis.',
@@ -59,7 +59,7 @@ const nl = {
   },
 
   hud: {
-    station: 'station ak-01 · lage baan om de aarde',
+    station: 'station AK-01',
     altitude: 'hoogte',
     speed: 'snelheid',
     perHour: 'km/u',
@@ -143,7 +143,7 @@ const nl = {
       ] as TermLine[],
     langCurrent: 'Huidige taal: Nederlands. Gebruik: lang en / lang nl',
     langSwitched: 'Taal ingesteld op Nederlands. 🇳🇱',
-    pwd: '/ruimte/laag-baan/ak-01/thuis',
+    pwd: '/ruimte/ak-01/thuis',
     sudo: [
       { text: 'bezoeker staat niet in het sudoers-bestand.', cls: 'err' },
       { text: 'Dit incident wordt gerapporteerd aan Houston. 🛰️', cls: 'dim' },
@@ -200,7 +200,7 @@ const en: typeof nl = {
 
   solar: {
     title: 'Solar panels',
-    subtitle: 'station ak-01 · power supply',
+    subtitle: 'station AK-01 · power supply',
     batteryTitle: 'Battery — live powered by real solar panels (click for more)',
     intro:
       'This MacBook runs on real solar power: the percentage in the menu bar is the current output of my solar panels at home.',
@@ -217,7 +217,7 @@ const en: typeof nl = {
   },
 
   hud: {
-    station: 'station ak-01 · low earth orbit',
+    station: 'station AK-01',
     altitude: 'altitude',
     speed: 'velocity',
     perHour: 'km/h',
@@ -300,7 +300,7 @@ const en: typeof nl = {
       ],
     langCurrent: 'Current language: English. Usage: lang en / lang nl',
     langSwitched: 'Language set to English. 🇬🇧',
-    pwd: '/space/low-earth-orbit/ak-01/home',
+    pwd: '/space/ak-01/home',
     sudo: [
       { text: 'visitor is not in the sudoers file.', cls: 'err' },
       { text: 'This incident will be reported to Houston. 🛰️', cls: 'dim' },
