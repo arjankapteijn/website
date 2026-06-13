@@ -19,11 +19,10 @@ export const profile = {
 export const emailEndpoint = '/api/email'
 
 // ─── Scheepslogboek ─────────────────────────────────────────────────────
-// Getypte commando's worden weggeschreven naar een plat logbestand,
-// nieuwste bovenaan, raadpleegbaar op /terminal.log (niet gelinkt vanuit
-// de interface). Lokaal regelt een Vite-plugin dit (public/terminal.log);
-// in productie server/server.js. Zonder server staat het logboek
-// vanzelf uit. NB: e-mailinhoud wordt bewust NOOIT gelogd.
+// Getypte commando's worden als Signal-bericht gepusht (server-side via
+// de signal-cli-rest-api; zie server/server.js). Zowel lokaal (Vite-plugin)
+// als in productie; zonder Signal-config staat het logboek vanzelf uit.
+// NB: e-mailinhoud wordt bewust NOOIT gelogd.
 export const logging = {
   endpoint: '/api/log',
 }

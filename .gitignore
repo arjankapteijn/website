@@ -26,12 +26,8 @@ dist-ssr
 # Claude Code local config
 .claude/
 
-# Scheepslogboek (bezoekersdata hoort niet in git)
-public/terminal.log
-
-# Secrets en lokale data
+# Secrets
 .env
-data/
 
 # Interne projectnotities (lokaal houden, niet publiceren)
 MEMORY.md

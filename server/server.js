@@ -1,6 +1,6 @@
 // Zero-dependency productieserver:
 //   - serveert de gebouwde site uit dist/
-//   - POST /api/log    → scheepslogboek (nieuwste bovenaan, publiek op /terminal.log)
+//   - POST /api/log    → scheepslogboek (Signal-push, zie server/signal.js)
 //   - POST /api/email  → verstuurt e-mail via SMTP2GO (zie server/smtp.js)
 //   - GET  /healthz    → healthcheck voor Docker
 //
@@ -8,14 +8,15 @@
 //
 // Configuratie via environment (zie .env.example):
 //   PORT       (default 8080)
-//   DATA_DIR   map voor terminal.log (default: dist/) — mount in Docker
+//   SIGNAL_API_URL / SIGNAL_NUMBER   zonder deze is /api/log uitgeschakeld
+//   SIGNAL_RECIPIENTS   komma-gescheiden; default note-to-self (SIGNAL_NUMBER)
 //   SMTP_HOST  default mail-eu.smtp2go.com
 //   SMTP_PORT  default 465 (impliciete TLS)
 //   SMTP_USER / SMTP_PASS   zonder deze twee is /api/email uitgeschakeld
 //   MAIL_TO    default info@arjankapteijn.nl
 //   MAIL_FROM  default Station AK-01 <noreply@arjankapteijn.nl>
 //
-// Bezoekers-IP's staan onverkort in het openbare logboek (bewuste keuze);
+// Bezoekers-IP's gaan onverkort mee in de Signal-melding (bewuste keuze);
 // e-mailinhoud bereikt het logboek nooit.
 
 import http from 'node:http'
@@ -24,14 +25,24 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { sendMail } from './smtp.js'
+import { sendSignal } from './signal.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
-const DATA_DIR = process.env.DATA_DIR || DIST
-const LOG_FILE = path.join(DATA_DIR, 'terminal.log')
 const PORT = Number(process.env.PORT) || 8080
-const MAX_LOG_LINES = 2000
 const LOG_RATE_LIMIT = 30 // posts per minuut per IP
 const MAIL_RATE_LIMIT = 4 // mails per minuut per IP
+
+// ─── Scheepslogboek via Signal ──────────────────────────────────────────
+// Elk getypt commando wordt als los Signal-bericht gepusht via de
+// signal-cli-rest-api. Recipients standaard het eigen nummer (note-to-self).
+const SIGNAL = {
+  url: process.env.SIGNAL_API_URL || '',
+  number: process.env.SIGNAL_NUMBER || '',
+  recipients: (process.env.SIGNAL_RECIPIENTS || process.env.SIGNAL_NUMBER || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+}
 
 const SMTP = {
   host: process.env.SMTP_HOST || 'mail-eu.smtp2go.com',
@@ -86,7 +97,6 @@ const MIME = {
   '.wasm': 'application/wasm',
   '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8',
-  '.log': 'text/plain; charset=utf-8',
   '.woff2': 'font/woff2',
 }
 
@@ -95,7 +105,7 @@ const MIME = {
 // (de JS-bundle ~1,3 MB → ~0,3 MB). Onveranderlijke /assets/-bestanden
 // (Vite-hash in de naam) cachen we in het geheugen zodat we maar één keer
 // op kwaliteit 11 hoeven te comprimeren.
-const COMPRESSIBLE_EXT = new Set(['.js', '.css', '.html', '.svg', '.json', '.txt', '.log', '.wasm'])
+const COMPRESSIBLE_EXT = new Set(['.js', '.css', '.html', '.svg', '.json', '.txt', '.wasm'])
 const compCache = new Map()
 
 function compress(data, filePath, immutable, accept) {
@@ -150,23 +160,11 @@ async function readBody(req, res, maxBytes = 4096) {
 
 // ─── Scheepslogboek ─────────────────────────────────────────────────────
 
-// schrijfacties serialiseren zodat gelijktijdige posts elkaar niet overschrijven
-let writeQueue = Promise.resolve()
-function appendLog(line) {
-  writeQueue = writeQueue.then(async () => {
-    let existing = ''
-    try {
-      existing = await fs.readFile(LOG_FILE, 'utf8')
-    } catch {
-      /* bestand bestaat nog niet */
-    }
-    const lines = (line + '\n' + existing).split('\n').slice(0, MAX_LOG_LINES)
-    await fs.writeFile(LOG_FILE, lines.join('\n'))
-  })
-  return writeQueue
-}
-
 async function handleLogPost(req, res) {
+  if (!SIGNAL.url || !SIGNAL.number || !SIGNAL.recipients.length) {
+    res.writeHead(501).end() // niet geconfigureerd → client faalt stil
+    return
+  }
   const ip = clientIp(req)
   if (rateLimited('log:' + ip, LOG_RATE_LIMIT)) {
     res.writeHead(429).end()
@@ -184,8 +182,18 @@ async function handleLogPost(req, res) {
     return
   }
   const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
-  await appendLog(`[${stamp}] ${ip} (${lang}) % ${command}`)
-  res.writeHead(204).end()
+  try {
+    await sendSignal({
+      url: SIGNAL.url,
+      number: SIGNAL.number,
+      recipients: SIGNAL.recipients,
+      message: `[${stamp}] ${ip} (${lang}) % ${command}`,
+    })
+    res.writeHead(204).end()
+  } catch (err) {
+    console.error('signal mislukt:', err?.message ?? err)
+    res.writeHead(502).end()
+  }
 }
 
 // ─── E-mail via SMTP2GO ─────────────────────────────────────────────────
@@ -290,12 +298,8 @@ async function handleSolarGet(req, res) {
 async function serveStatic(req, res) {
   const url = new URL(req.url, 'http://localhost')
 
-  // het logboek leeft in DATA_DIR (persistent volume in Docker)
-  let filePath =
-    url.pathname === '/terminal.log'
-      ? LOG_FILE
-      : path.normalize(path.join(DIST, decodeURIComponent(url.pathname)))
-  if (!filePath.startsWith(DIST) && filePath !== LOG_FILE) {
+  let filePath = path.normalize(path.join(DIST, decodeURIComponent(url.pathname)))
+  if (!filePath.startsWith(DIST)) {
     res.writeHead(403).end()
     return
   }
@@ -303,16 +307,12 @@ async function serveStatic(req, res) {
     const stat = await fs.stat(filePath)
     if (stat.isDirectory()) filePath = path.join(filePath, 'index.html')
   } catch {
-    if (filePath === LOG_FILE) {
-      res.writeHead(404).end()
-      return
-    }
     filePath = path.join(DIST, 'index.html') // SPA-fallback
   }
   try {
     const data = await fs.readFile(filePath)
     const type = MIME[path.extname(filePath)] ?? 'application/octet-stream'
-    const noCache = filePath.endsWith('.log') || filePath.endsWith('index.html')
+    const noCache = filePath.endsWith('index.html')
     // Vite-assets dragen een content-hash in hun naam → onbeperkt cachebaar
     const immutable = url.pathname.startsWith('/assets/')
     const cacheControl = noCache
@@ -331,14 +331,6 @@ async function serveStatic(req, res) {
   } catch {
     res.writeHead(404).end('not found')
   }
-}
-
-// logbestand klaarzetten zodat het direct publiek bestaat
-await fs.mkdir(DATA_DIR, { recursive: true })
-try {
-  await fs.access(LOG_FILE)
-} catch {
-  await fs.writeFile(LOG_FILE, '')
 }
 
 http

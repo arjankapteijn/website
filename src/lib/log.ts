@@ -31,11 +31,11 @@ export function useIp(): string | null {
   return ip
 }
 
-// ─── Openbaar scheepslogboek ────────────────────────────────────────────
-// De server (of de Vite-plugin in dev) schrijft regels bovenaan een plat
-// logbestand, inclusief het volledige bezoekers-IP. Publiek raadpleegbaar op
-// logging.file (/terminal.log). Faalt stil: het logboek mag de site
-// nooit breken, en op statische hosting bestaat het endpoint simpelweg niet.
+// ─── Scheepslogboek ─────────────────────────────────────────────────────
+// De server (of de Vite-plugin in dev) pusht elk commando als los Signal-
+// bericht, inclusief het volledige bezoekers-IP (zie server/signal.js).
+// Faalt stil: het logboek mag de site nooit breken, en op statische hosting
+// (of zonder Signal-config) bestaat het endpoint simpelweg niet.
 
 export function logCommand(command: string, lang: string): void {
   void fetch(logging.endpoint, {

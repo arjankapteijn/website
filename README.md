@@ -25,7 +25,7 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | Terminal op het scherm | drei `<Html transform occlude>` + eigen React-component |
 | Live ISS-data | [wheretheiss.at API](https://wheretheiss.at/w/developer) (satelliet 25544, geen key nodig) |
 | E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
-| Scheepslogboek | zero-dependency Node-server (`server/server.js`) → `/terminal.log` |
+| Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`) |
 | Hosting | Docker-container op TrueNAS, achter Nginx Proxy Manager (Let's Encrypt) |
 
 Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd
@@ -85,7 +85,8 @@ De site draait als kleine, gehardende Docker-container
 multi-stage build (geen node_modules in het eindimage), draait als
 niet-root (uid 10001), `read_only` rootfs, alle capabilities gedropt,
 `no-new-privileges`, geheugen- en pids-limiet, en een healthcheck op
-`/healthz`. Alleen het `/data`-volume (scheepslogboek) is schrijfbaar.
+`/healthz`. De rootfs is volledig read-only — er wordt niets weggeschreven
+(het logboek gaat via Signal).
 
 ### Eerste keer uitrollen
 
@@ -127,8 +128,6 @@ services:
     ports:
       - '8090:8080'
     env_file: /mnt/<pool>/apps/arjankapteijn/.env
-    volumes:
-      - /mnt/<pool>/apps/arjankapteijn/data:/data
     read_only: true
     cap_drop: [ALL]
     security_opt:
@@ -156,8 +155,8 @@ restart van de app in de UI.
 4. DNS van beide domeinen → je publieke IP (A-record), en poort 80/443
    geforward naar NPM.
 
-NPM stuurt `X-Forwarded-For` standaard mee, zodat de prompt en het
-logboek het echte bezoekers-IP zien.
+NPM stuurt `X-Forwarded-For` standaard mee, zodat de prompt en de
+Signal-melding het echte bezoekers-IP zien.
 
 ### Updaten
 
@@ -166,8 +165,8 @@ cd /mnt/<pool>/apps/arjankapteijn
 git pull && docker compose up -d --build
 ```
 
-Het logboek in `./data/` blijft staan. Lokaal de productieversie testen:
-`npm run build && npm start` (→ http://localhost:8080).
+Lokaal de productieversie testen: `npm run build && npm start`
+(→ http://localhost:8080).
 
 ## Live ISS-data
 
@@ -201,32 +200,32 @@ automatisch terug op een `mailto:`-link.
 **Let op:** het `MAIL_FROM`-domein moet in SMTP2GO als sender domain
 geverifieerd zijn, en commit `.env` nooit (staat in `.gitignore`).
 
-## Scheepslogboek
+## Scheepslogboek (Signal)
 
-Alles wat bezoekers in de terminal typen wordt weggeschreven naar een plat
-logbestand, **nieuwste bovenaan**, raadpleegbaar op **`/terminal.log`**
-(bijv. `https://arjankapteijn.nl/terminal.log` — bewust niet gelinkt of
-gemeld in de interface). Regelformaat:
+Alles wat bezoekers in de terminal typen wordt als los **Signal-bericht**
+gepusht via een zelf-gehoste [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api).
+`server/server.js` handelt `POST /api/log` af en stuurt via `server/signal.js`
+een `POST /v2/send`. Berichtformaat:
 
 ```
-[2026-06-12 11:42:07 UTC] 86.82.x.x (nl) % neofetch
+[2026-06-12 11:42:07 UTC] 86.82.123.45 (nl) % neofetch
 ```
 
 Hoe het werkt:
 
-- **Lokaal (`npm run dev`)** — een Vite-plugin (zie `vite.config.ts`)
-  schrijft naar `public/terminal.log` (genegeerd door git).
-- **Productie** — `server/server.js` handelt `POST /api/log` af; het
-  logbestand leeft in `DATA_DIR` (in Docker het `/data`-volume, dus
-  persistent over herstarts en updates heen). Max. 2000 regels,
-  30 posts/minuut per IP.
+- **Config** (`.env`, zie [.env.example](.env.example)): `SIGNAL_API_URL`,
+  `SIGNAL_NUMBER` (het geregistreerde afzendernummer) en optioneel
+  `SIGNAL_RECIPIENTS` (komma-gescheiden; leeg = note-to-self). Ontbreekt de
+  config, dan staat het logboek vanzelf uit (`501`, de client faalt stil).
+- **Lokaal én productie** delen dezelfde `sendSignal()` (een Vite-plugin
+  spiegelt in dev het productiegedrag). Max. 30 posts/minuut per IP.
 
-Privacy: de bezoeker ziet zijn eigen volledige IP in de prompt, maar in
-het logboek wordt het **gemaskeerd** opgeslagen (`86.82.x.x`) en
-e-mailinhoud (onderwerp/bericht) wordt **nooit** gelogd. **Let op (AVG):**
-ook gemaskeerde IP's + tijdstippen kunnen persoonsgegevens zijn, en de
-interface meldt niet dát er gelogd wordt — vermeld dit dus zelf in een
-privacyverklaring.
+**Privacy / AVG:** het volledige bezoekers-IP gaat **onverkort** mee in de
+Signal-melding (bewuste keuze). E-mailinhoud (onderwerp/bericht) wordt
+**nooit** gelogd. IP's + tijdstippen zijn persoonsgegevens, en de interface
+meldt niet dát er gelogd wordt — vermeld dit dus zelf in een
+privacyverklaring. Houd er rekening mee dat je hiermee bezoekers-IP's naar
+een Signal-kanaal stuurt.
 
 ## Credits & licenties
 
