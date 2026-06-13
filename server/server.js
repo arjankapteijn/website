@@ -19,6 +19,7 @@
 // e-mailinhoud bereikt het logboek nooit.
 
 import http from 'node:http'
+import zlib from 'node:zlib'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -86,6 +87,28 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8',
   '.log': 'text/plain; charset=utf-8',
   '.woff2': 'font/woff2',
+}
+
+// ─── Compressie ─────────────────────────────────────────────────────────
+// Tekst-achtige assets brotli/gzip'en scheelt fors op trage verbindingen
+// (de JS-bundle ~1,3 MB → ~0,3 MB). Onveranderlijke /assets/-bestanden
+// (Vite-hash in de naam) cachen we in het geheugen zodat we maar één keer
+// op kwaliteit 11 hoeven te comprimeren.
+const COMPRESSIBLE_EXT = new Set(['.js', '.css', '.html', '.svg', '.json', '.txt', '.log', '.wasm'])
+const compCache = new Map()
+
+function compress(data, filePath, immutable, accept) {
+  if (data.length < 1024 || !COMPRESSIBLE_EXT.has(path.extname(filePath))) return { body: data }
+  const enc = /\bbr\b/.test(accept) ? 'br' : /\bgzip\b/.test(accept) ? 'gzip' : null
+  if (!enc) return { body: data }
+  const key = filePath + '\0' + enc
+  if (immutable && compCache.has(key)) return { body: compCache.get(key), enc }
+  const body =
+    enc === 'br'
+      ? zlib.brotliCompressSync(data, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } })
+      : zlib.gzipSync(data, { level: 9 })
+  if (immutable) compCache.set(key, body)
+  return { body, enc }
 }
 
 function clientIp(req) {
@@ -289,11 +312,21 @@ async function serveStatic(req, res) {
     const data = await fs.readFile(filePath)
     const type = MIME[path.extname(filePath)] ?? 'application/octet-stream'
     const noCache = filePath.endsWith('.log') || filePath.endsWith('index.html')
-    res.writeHead(200, {
-      'Content-Type': type,
-      'Cache-Control': noCache ? 'no-store' : 'public, max-age=3600',
-    })
-    res.end(data)
+    // Vite-assets dragen een content-hash in hun naam → onbeperkt cachebaar
+    const immutable = url.pathname.startsWith('/assets/')
+    const cacheControl = noCache
+      ? 'no-store'
+      : immutable
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=3600'
+    const { body, enc } = compress(data, filePath, immutable, req.headers['accept-encoding'] || '')
+    const headers = { 'Content-Type': type, 'Cache-Control': cacheControl }
+    if (enc) {
+      headers['Content-Encoding'] = enc
+      headers['Vary'] = 'Accept-Encoding'
+    }
+    res.writeHead(200, headers)
+    res.end(req.method === 'HEAD' ? undefined : body)
   } catch {
     res.writeHead(404).end('not found')
   }
