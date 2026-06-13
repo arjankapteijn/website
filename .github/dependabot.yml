@@ -1,0 +1,49 @@
+# Dependabot — automatische dependency-updates.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+#
+# LET OP: dit bestand regelt de wekelijkse *versie*-PR's. De SECURITY-
+# meldingen (Dependabot alerts) en de automatische security-fixes staan
+# los hiervan en zet je aan via GitHub → Settings → Code security and
+# analysis → "Dependabot alerts" + "Dependabot security updates".
+version: 2
+updates:
+  # ── npm (Vite / React / TypeScript) ──────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    # minor + patch samen in één PR (minder ruis); major-updates blijven
+    # losse PR's zodat je breaking changes per stuk kunt beoordelen.
+    groups:
+      minor-en-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ── Docker base-image (node:22-alpine) ───────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "docker"
+    # blijf op de gekozen Node-LTS-major; geen PR's die naar een nieuwe
+    # major (23/24/…) duwen. Haal dit blok weg als je die juist wél wilt.
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
