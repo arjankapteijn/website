@@ -3,7 +3,7 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 // gedeeld met de productieserver; JS-module zonder eigen typings
 // @ts-expect-error - geen .d.ts voor server/signal.js
-import { sendSignal } from './server/signal.js'
+import { sendSignal, formatLogMessage } from './server/signal.js'
 
 // Dev-versie van het scheepslogboek: pusht getypte commando's als Signal-
 // bericht, net als server/server.js in productie. Config uit .env
@@ -38,10 +38,9 @@ function terminalLog(): Plugin {
                 .map((s) => s.trim())
                 .filter(Boolean)
               if (url && number && recipients.length) {
-                const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
                 const ip = (req.socket.remoteAddress || '?').replace(/^::ffff:/, '')
-                const message = `[${stamp}] ${ip} (${String(lang).slice(0, 5)}) % ${clean}`
-                await sendSignal({ url, number, recipients, message })
+                const message = formatLogMessage({ ip, lang: String(lang).slice(0, 5), command: clean })
+                await sendSignal({ url, number, recipients, message, textMode: 'styled' })
               }
               res.statusCode = 204
             } catch {

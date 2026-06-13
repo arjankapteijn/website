@@ -25,7 +25,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { sendMail } from './smtp.js'
-import { sendSignal } from './signal.js'
+import { sendSignal, formatLogMessage } from './signal.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const PORT = Number(process.env.PORT) || 8080
@@ -181,13 +181,13 @@ async function handleLogPost(req, res) {
     res.writeHead(400).end()
     return
   }
-  const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
   try {
     await sendSignal({
       url: SIGNAL.url,
       number: SIGNAL.number,
       recipients: SIGNAL.recipients,
-      message: `[${stamp}] ${ip} (${lang}) % ${command}`,
+      message: formatLogMessage({ ip, lang, command }),
+      textMode: 'styled',
     })
     res.writeHead(204).end()
   } catch (err) {
