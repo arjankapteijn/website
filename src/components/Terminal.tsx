@@ -290,6 +290,8 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
         break
       case 'coffee':
       case 'koffie':
+      // easter-egg: 'brew' (Homebrew) knipoogt naar het koffie-commando
+      case 'brew':
         print(...t.coffee)
         break
       case 'exit':
