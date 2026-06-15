@@ -22,6 +22,10 @@ concurrency:
 env:
   IMAGE: ghcr.io/${{ github.repository }}
 
+# Restrictieve default voor de GITHUB_TOKEN; jobs vragen expliciet meer aan.
+permissions:
+  contents: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
