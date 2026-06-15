@@ -9,11 +9,13 @@ De HUD toont **live telemetrie van het echte ISS** en de site is tweetalig
 an interactive terminal. Dutch on `.nl`, English on `.com`.*
 
 [![CI](https://github.com/arjankapteijn/website/actions/workflows/ci.yml/badge.svg)](https://github.com/arjankapteijn/website/actions/workflows/ci.yml)
+[![Publish Docker image](https://github.com/arjankapteijn/website/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/arjankapteijn/website/actions/workflows/docker-publish.yml)
 ![Node](https://img.shields.io/badge/Node-24_LTS-339933?logo=nodedotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 ![Three.js](https://img.shields.io/badge/Three.js-000000?logo=threedotjs&logoColor=white)
+![Container](https://img.shields.io/badge/image-ghcr.io-2496ED?logo=docker&logoColor=white)
 
 ## Stack
 
