@@ -7,6 +7,11 @@ describe('formatLogMessage', () => {
     const msg = formatLogMessage({ ip: '203.0.113.9', lang: 'nl', command: 'help' })
     expect(msg).toBe('🛰️ **AK-01 · scheepslogboek**\n`help`\n203.0.113.9 · nl')
   })
+
+  it('voegt de locatie toe aan de meta-regel als die is meegegeven', () => {
+    const msg = formatLogMessage({ ip: '203.0.113.9', lang: 'nl', command: 'help', location: 'Amsterdam, NL' })
+    expect(msg).toBe('🛰️ **AK-01 · scheepslogboek**\n`help`\n203.0.113.9 · nl · 📍 Amsterdam, NL')
+  })
 })
 
 describe('sendSignal', () => {

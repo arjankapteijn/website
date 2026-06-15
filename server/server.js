@@ -16,8 +16,10 @@
 //   MAIL_TO    default info@arjankapteijn.nl
 //   MAIL_FROM  default Station AK-01 <noreply@arjankapteijn.nl>
 //
-// Bezoekers-IP's gaan onverkort mee in de Signal-melding (bewuste keuze);
+// Bezoekers-IP's gaan onverkort mee in de Signal-melding (bewuste keuze),
+// met een grove herkomst ("Amsterdam, NL") via server/geo.js;
 // e-mailinhoud bereikt het logboek nooit.
+//   GEO_API_URL   default http://ip-api.com/json (gratis, geen key); leeg = uit
 
 import http from 'node:http'
 import zlib from 'node:zlib'
@@ -26,6 +28,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { sendMail } from './smtp.js'
 import { sendSignal, formatLogMessage } from './signal.js'
+import { lookupLocation } from './geo.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const PORT = Number(process.env.PORT) || 8080
@@ -182,11 +185,12 @@ async function handleLogPost(req, res) {
     return
   }
   try {
+    const location = await lookupLocation(ip) // grove herkomst; null bij fout
     await sendSignal({
       url: SIGNAL.url,
       number: SIGNAL.number,
       recipients: SIGNAL.recipients,
-      message: formatLogMessage({ ip, lang, command }),
+      message: formatLogMessage({ ip, lang, command, location }),
       textMode: 'styled',
     })
     res.writeHead(204).end()

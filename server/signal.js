@@ -29,7 +29,10 @@ export async function sendSignal({ url, number, recipients, message, textMode })
  * Eén logboekregel als styled Signal-bericht: vette kop, commando in
  * monospace, meta-regel eronder. Tijd/datum laten we weg — die toont
  * Signal zelf al. Verstuur met textMode 'styled'.
+ * location (optioneel) → grove herkomst, bijv. "📍 Amsterdam, NL".
  */
-export function formatLogMessage({ ip, lang, command }) {
-  return `🛰️ **AK-01 · scheepslogboek**\n\`${command}\`\n${ip} · ${lang}`
+export function formatLogMessage({ ip, lang, command, location }) {
+  let meta = `${ip} · ${lang}`
+  if (location) meta += ` · 📍 ${location}`
+  return `🛰️ **AK-01 · scheepslogboek**\n\`${command}\`\n${meta}`
 }
