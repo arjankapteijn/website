@@ -7,6 +7,11 @@ name: Publish Docker image
 on:
   push:
     branches: [main]
+    # doc-only commits hoeven geen image te bouwen / :latest te verschuiven.
+    # NB: path-filters gelden niet voor tag-pushes — releases (v*) bouwen altijd.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
     tags: ['v*']
 
 # nieuwe push op dezelfde branch annuleert een nog lopende build
