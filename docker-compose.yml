@@ -4,7 +4,11 @@
 
 services:
   website:
-    build: .
+    # Kant-en-klaar image van ghcr.io (gebouwd door GitHub Actions, privé).
+    # Pull/update i.p.v. lokaal bouwen: `docker compose pull && docker compose up -d`,
+    # of klik "Update" in de TrueNAS-app. Eenmalig inloggen: zie README.
+    # Lokaal zelf bouwen? Vervang deze regel tijdelijk door `build: .`.
+    image: ghcr.io/arjankapteijn/website:latest
     container_name: arjankapteijn-website
     restart: unless-stopped
     ports:

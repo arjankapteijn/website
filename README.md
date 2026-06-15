@@ -88,6 +88,24 @@ niet-root (uid 10001), `read_only` rootfs, alle capabilities gedropt,
 `/healthz`. De rootfs is volledig read-only — er wordt niets weggeschreven
 (het logboek gaat via Signal).
 
+Het image wordt door **GitHub Actions** gebouwd en als privé-image naar
+**ghcr.io** gepusht (`ghcr.io/arjankapteijn/website`, zie
+[docker-publish.yml](.github/workflows/docker-publish.yml)). Op TrueNAS
+hoef je dus niet meer te klonen of te bouwen — alleen te pullen.
+
+### Eenmalig: inloggen bij ghcr.io
+
+Omdat het image privé is, moet de TrueNAS-host één keer inloggen bij de
+registry. Maak op GitHub een **Personal Access Token (classic)** met enkel
+de scope `read:packages` en log in via SSH:
+
+```bash
+echo <TOKEN> | docker login ghcr.io -u arjankapteijn --password-stdin
+```
+
+De credentials komen in `~/.docker/config.json` te staan en blijven geldig
+voor toekomstige pulls.
+
 ### Eerste keer uitrollen
 
 ```bash
@@ -95,7 +113,8 @@ niet-root (uid 10001), `read_only` rootfs, alle capabilities gedropt,
 git clone https://github.com/arjankapteijn/website.git arjankapteijn
 cd arjankapteijn
 cp .env.example .env && nano .env   # SMTP2GO-wachtwoord invullen
-docker compose up -d --build
+docker compose pull                 # haalt het image van ghcr.io
+docker compose up -d
 curl http://localhost:8090/healthz  # → ok
 ```
 
@@ -107,22 +126,15 @@ voor VM's/LXC) staat hier ook los van en kan gewoon uit blijven.
 
 ### Optioneel: zichtbaar maken in de TrueNAS Apps-UI
 
-Wil je een start/stop-knop en status in de webinterface, registreer de
-container dan als custom app:
-
-```bash
-cd /mnt/<pool>/apps/arjankapteijn
-docker compose down          # stop de CLI-versie
-docker compose build         # image lokaal bouwen/verversen
-```
-
-Dan **Apps → Discover Apps → ⋮ → Install via YAML**, naam
-`arjankapteijn`, met deze inhoud (absolute paden, vooraf gebouwd image):
+Wil je een start/stop-knop, status én een **Update-knop** in de
+webinterface, registreer de container dan als custom app via
+**Apps → Discover Apps → ⋮ → Install via YAML**, naam `arjankapteijn`,
+met deze inhoud (absolute paden, kant-en-klaar image van ghcr.io):
 
 ```yaml
 services:
   website:
-    image: arjankapteijn-website
+    image: ghcr.io/arjankapteijn/website:latest
     container_name: arjankapteijn-website
     restart: unless-stopped
     ports:
@@ -138,8 +150,9 @@ services:
     pids_limit: 64
 ```
 
-Updaten gaat dan met `git pull && docker compose build` gevolgd door een
-restart van de app in de UI.
+(De host-login bij ghcr.io uit de vorige stap geldt ook hier.) Zodra
+GitHub Actions een nieuw image onder de `latest`-tag pusht, toont TrueNAS
+bij de app een **Update**-knop — één klik en de nieuwe versie draait.
 
 ### Achter Nginx Proxy Manager (Let's Encrypt)
 
@@ -160,10 +173,15 @@ Signal-melding het echte bezoekers-IP zien.
 
 ### Updaten
 
-```bash
-cd /mnt/<pool>/apps/arjankapteijn
-git pull && docker compose up -d --build
-```
+Push je naar `main`, dan bouwt GitHub Actions automatisch een nieuw image.
+Uitrollen kan dan op twee manieren — geen `git pull`, geen lokale build:
+
+- **TrueNAS Apps-UI:** klik op de **Update**-knop bij de app.
+- **Via SSH:**
+  ```bash
+  cd /mnt/<pool>/apps/arjankapteijn
+  docker compose pull && docker compose up -d
+  ```
 
 Lokaal de productieversie testen: `npm run build && npm start`
 (→ http://localhost:8080).
