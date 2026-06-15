@@ -1,6 +1,6 @@
 name: CI
 
-# Lint + build op elke push naar main en op elke PR (incl. Dependabot),
+# Lint + test + build op elke push naar main en op elke PR (incl. Dependabot),
 # zodat dependency-PR's meteen groen/rood tonen. Draait op ubuntu (1×-tarief)
 # en bewaart geen artifacts → blijft binnen het gratis Actions-tegoed.
 on:
@@ -27,4 +27,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm test
       - run: npm run build
