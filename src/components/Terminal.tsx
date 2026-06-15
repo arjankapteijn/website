@@ -288,9 +288,9 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
           print(...t.sudo)
         }
         break
+      // easter-egg: 'brew' (Homebrew) knipoogt naar het koffie-commando
       case 'coffee':
       case 'koffie':
-      // easter-egg: 'brew' (Homebrew) knipoogt naar het koffie-commando
       case 'brew':
         print(...t.coffee)
         break
