@@ -186,6 +186,34 @@ Uitrollen kan dan op twee manieren — geen `git pull`, geen lokale build:
 Lokaal de productieversie testen: `npm run build && npm start`
 (→ http://localhost:8080).
 
+### Versies / releases
+
+Elke push naar `main` verschuift de `latest`-tag (waar de TrueNAS-app op
+volgt → Update-knop). Voor een traceerbare release maak je daarnaast een
+git-tag aan:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions bouwt dan extra image-tags op ghcr.io:
+
+| Git-tag  | Image-tags                          |
+|----------|-------------------------------------|
+| `v1.2.3` | `:1.2.3`, `:1.2` (+ ongewijzigd `:latest` vanaf main) |
+
+Zo kun je:
+
+- **Terugrollen:** zet de app tijdelijk op een vaste versie, bijv.
+  `image: ghcr.io/arjankapteijn/website:1.1.0`, en herstart.
+- **Pinnen met patch-updates:** gebruik `:1.2` om binnen een minor-versie
+  automatische patches mee te krijgen, zonder sprong naar een nieuwe minor.
+
+De TrueNAS-app blijft standaard op `:latest` staan, dus de Update-knop
+werkt gewoon door; de versie-tags zijn er puur voor traceerbaarheid en
+rollback.
+
 ## Live ISS-data
 
 De site gebruikt `https://api.wheretheiss.at/v1/satellites/25544` (gratis,
