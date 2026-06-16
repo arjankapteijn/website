@@ -1,13 +1,16 @@
 name: Publish Docker image
 
 # Bouwt het container-image en pusht het naar GitHub Container Registry
-# (ghcr.io) bij elke push naar main en bij elke versie-tag (v1.2.3).
-# Op TrueNAS hoef je daarna alleen nog op "Update" te klikken — geen
-# git pull + lokale build meer.
+# (ghcr.io). Bij elke push naar main wordt eerst automatisch de volgende
+# semver-tag afgeleid uit de commit-messages (conventional commits:
+# feat -> minor, BREAKING/!-> major, anders patch) en aangemaakt; in
+# diezelfde run wordt meteen het :x.y.z-image gebouwd. Handmatige v*-tags
+# blijven ook gewoon werken.
+# Op TrueNAS pin je de app op een vaste tag (bijv. :1.1.0) en bump je die.
 on:
   push:
     branches: [main]
-    # doc-only commits hoeven geen image te bouwen / :latest te verschuiven.
+    # doc-only commits hoeven geen image te bouwen / versie te bumpen.
     # NB: path-filters gelden niet voor tag-pushes — releases (v*) bouwen altijd.
     paths-ignore:
       - '**.md'
@@ -30,10 +33,53 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # nodig om de auto-versie-tag te pushen
       packages: write # nodig om naar ghcr.io te pushen
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0 # volledige historie + tags voor de versieberekening
+
+      # Leidt de volgende semver-tag af uit de commits sinds de laatste tag
+      # en maakt 'm aan. Draait alleen bij push naar main, niet bij een
+      # handmatige v*-tag-push (dan komt de versie uit de tag zelf, zie meta).
+      # De tag wordt met de GITHUB_TOKEN gepusht; dat triggert deze workflow
+      # bewust NIET opnieuw (GitHub voorkomt die recursie), dus we bouwen het
+      # versie-image in deze run mee.
+      - name: Volgende versie bepalen & taggen
+        id: version
+        if: github.ref_type == 'branch'
+        run: |
+          set -euo pipefail
+          last=$(git describe --tags --match 'v*' --abbrev=0 2>/dev/null || echo v0.0.0)
+          echo "Laatste tag: $last"
+          # Niets te doen als HEAD al een tag heeft.
+          if git describe --tags --exact-match HEAD >/dev/null 2>&1; then
+            echo "HEAD is al getagd — geen nieuwe versie."
+            exit 0
+          fi
+          msgs=$(git log "${last}..HEAD" --format='%s%n%b')
+          bump=patch
+          if echo "$msgs" | grep -qE '^(feat)(\(.+\))?(!)?:'; then bump=minor; fi
+          if echo "$msgs" | grep -qE '^[a-zA-Z]+(\(.+\))?!:' || echo "$msgs" | grep -q 'BREAKING CHANGE'; then bump=major; fi
+          ver=${last#v}
+          IFS=. read -r MA MI PA <<< "$ver"
+          MA=${MA:-0}; MI=${MI:-0}; PA=${PA:-0}
+          case "$bump" in
+            major) MA=$((MA + 1)); MI=0; PA=0 ;;
+            minor) MI=$((MI + 1)); PA=0 ;;
+            patch) PA=$((PA + 1)) ;;
+          esac
+          new="${MA}.${MI}.${PA}"
+          echo "Bump: $bump  ->  v$new"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$new" -m "Release v$new"
+          git push origin "v$new"
+          {
+            echo "version=$new"
+            echo "major_minor=${MA}.${MI}"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
@@ -52,9 +98,13 @@ jobs:
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
+            type=sha,format=short
+            # bij push naar main: de zojuist berekende auto-versie
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ steps.version.outputs.version != '' }}
+            type=raw,value=${{ steps.version.outputs.major_minor }},enable=${{ steps.version.outputs.major_minor != '' }}
+            # bij handmatige v*-tag-push: versie uit de tag zelf
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=short
 
       - name: Bouwen en pushen
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
