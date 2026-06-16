@@ -28,7 +28,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { sendMail } from './smtp.js'
 import { sendSignal, formatLogMessage } from './signal.js'
-import { lookupLocation } from './geo.js'
+import { lookupGeo } from './geo.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const PORT = Number(process.env.PORT) || 8080
@@ -185,12 +185,12 @@ async function handleLogPost(req, res) {
     return
   }
   try {
-    const location = await lookupLocation(ip) // grove herkomst; null bij fout
+    const { location, isp } = await lookupGeo(ip) // grove herkomst; null-velden bij fout
     await sendSignal({
       url: SIGNAL.url,
       number: SIGNAL.number,
       recipients: SIGNAL.recipients,
-      message: formatLogMessage({ ip, lang, command, location }),
+      message: formatLogMessage({ ip, lang, command, location, isp }),
       textMode: 'styled',
     })
     res.writeHead(204).end()

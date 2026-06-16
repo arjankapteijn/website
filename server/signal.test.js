@@ -3,14 +3,20 @@ import { describe, expect, it, vi } from 'vitest'
 import { formatLogMessage, sendSignal } from './signal.js'
 
 describe('formatLogMessage', () => {
-  it('rendert een styled regel: vette kop, commando in monospace, meta eronder', () => {
+  it('rendert kop, commando in monospace, lege regel, dan ip · taal', () => {
     const msg = formatLogMessage({ ip: '203.0.113.9', lang: 'nl', command: 'help' })
-    expect(msg).toBe('🛰️ **AK-01 · scheepslogboek**\n`help`\n203.0.113.9 · nl')
+    expect(msg).toBe('🛰️ **AK-01 · scheepslogboek**\n`help`\n\n203.0.113.9 · nl')
   })
 
-  it('voegt de locatie toe aan de meta-regel als die is meegegeven', () => {
-    const msg = formatLogMessage({ ip: '203.0.113.9', lang: 'nl', command: 'help', location: 'Amsterdam, NL' })
-    expect(msg).toBe('🛰️ **AK-01 · scheepslogboek**\n`help`\n203.0.113.9 · nl · 📍 Amsterdam, NL')
+  it('zet locatie en ISP elk op een eigen regel als ze zijn meegegeven', () => {
+    const msg = formatLogMessage({
+      ip: '203.0.113.9',
+      lang: 'nl',
+      command: 'help',
+      location: 'Amsterdam, NL',
+      isp: 'KPN B.V.',
+    })
+    expect(msg).toBe('🛰️ **AK-01 · scheepslogboek**\n`help`\n\n203.0.113.9 · nl\n📍 Amsterdam, NL\n🌐 KPN B.V.')
   })
 })
 

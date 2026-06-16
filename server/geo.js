@@ -1,14 +1,15 @@
-// Zet een bezoekers-IP om naar een grove locatie ("Amsterdam, NL") voor in
-// het scheepslogboek. Server-side, zero-dependency: leunt op globale fetch.
-// Gebruikt ip-api.com (gratis, geen key, 45 req/min). Het gratis plan is
-// HTTP-only; server-side is dat prima (geen mixed-content, CSP geldt alleen
+// Zet een bezoekers-IP om naar een grove locatie ("Amsterdam, NL") + ISP
+// voor in het scheepslogboek. Server-side, zero-dependency: leunt op globale
+// fetch. Gebruikt ip-api.com (gratis, geen key, 45 req/min). Het gratis plan
+// is HTTP-only; server-side is dat prima (geen mixed-content, CSP geldt alleen
 // in de browser). Faalt stil — lukt de lookup niet, dan gaat de logregel
-// gewoon zónder locatie door.
+// gewoon zónder herkomst door.
 
 const GEO_URL = process.env.GEO_API_URL ?? 'http://ip-api.com/json'
-const GEO_FIELDS = 'status,message,country,countryCode,city'
+const GEO_FIELDS = 'status,message,country,countryCode,city,isp'
 const TTL_MS = 6 * 60 * 60_000 // zelfde bezoeker → 6 uur uit cache
 const cache = new Map() // ip → { at, value }
+const EMPTY = { location: null, isp: null }
 
 /**
  * Privé/loopback/link-local IP's hebben geen zinnige geo-locatie en hoeven
@@ -28,26 +29,27 @@ export function isPublicIp(ip) {
 }
 
 /**
- * Vorm de ip-api.com-respons om tot een korte "Stad, LL"-string (of alleen
- * het land als de stad ontbreekt). Pure functie → goed te testen. null als
- * de lookup mislukte of er niets bruikbaars in zit.
+ * Vorm de ip-api.com-respons om tot { location, isp }: location is
+ * "Stad, LL" (of alleen het land als de stad ontbreekt), isp de provider.
+ * Pure functie → goed te testen. Velden die ontbreken worden null.
  */
-export function formatLocation(data) {
-  if (!data || data.status !== 'success') return null
+export function parseGeo(data) {
+  if (!data || data.status !== 'success') return EMPTY
   const city = typeof data.city === 'string' ? data.city.trim() : ''
   const code = typeof data.countryCode === 'string' ? data.countryCode.trim() : ''
   const country = typeof data.country === 'string' ? data.country.trim() : ''
   const parts = [city, code || country].filter(Boolean)
-  return parts.length ? parts.join(', ') : null
+  const isp = typeof data.isp === 'string' && data.isp.trim() ? data.isp.trim() : null
+  return { location: parts.length ? parts.join(', ') : null, isp }
 }
 
 /**
- * Resolve een IP naar "Stad, LL" of null. Cachet per IP, kapt af op een korte
- * time-out en slikt elke fout (de logregel mag er nooit op stuklopen).
- * GEO_API_URL leeg gezet → lookup volledig uit.
+ * Resolve een IP naar { location, isp }. Cachet per IP, kapt af op een korte
+ * time-out en slikt elke fout (de logregel mag er nooit op stuklopen) → dan
+ * { location: null, isp: null }. GEO_API_URL leeg gezet → lookup volledig uit.
  */
-export async function lookupLocation(ip, { fetchImpl = fetch, timeoutMs = 3000 } = {}) {
-  if (!GEO_URL || !isPublicIp(ip)) return null
+export async function lookupGeo(ip, { fetchImpl = fetch, timeoutMs = 3000 } = {}) {
+  if (!GEO_URL || !isPublicIp(ip)) return EMPTY
   const hit = cache.get(ip)
   if (hit && Date.now() - hit.at < TTL_MS) return hit.value
   try {
@@ -55,11 +57,11 @@ export async function lookupLocation(ip, { fetchImpl = fetch, timeoutMs = 3000 }
       `${GEO_URL.replace(/\/+$/, '')}/${encodeURIComponent(ip)}?fields=${GEO_FIELDS}`,
       { signal: AbortSignal.timeout(timeoutMs) },
     )
-    if (!res.ok) return null
-    const value = formatLocation(await res.json())
+    if (!res.ok) return EMPTY
+    const value = parseGeo(await res.json())
     cache.set(ip, { at: Date.now(), value })
     return value
   } catch {
-    return null
+    return EMPTY
   }
 }

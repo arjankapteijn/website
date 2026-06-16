@@ -27,12 +27,16 @@ export async function sendSignal({ url, number, recipients, message, textMode })
 
 /**
  * Eén logboekregel als styled Signal-bericht: vette kop, commando in
- * monospace, meta-regel eronder. Tijd/datum laten we weg — die toont
+ * monospace, dan (na een lege regel) de herkomst — elk op een eigen regel
+ * zodat het op mobiel niet inklapt. Tijd/datum laten we weg — die toont
  * Signal zelf al. Verstuur met textMode 'styled'.
- * location (optioneel) → grove herkomst, bijv. "📍 Amsterdam, NL".
+ * location/isp (optioneel) → grove herkomst, bijv. "📍 Amsterdam, NL" en
+ * "🌐 KPN B.V.".
  */
-export function formatLogMessage({ ip, lang, command, location }) {
-  let meta = `${ip} · ${lang}`
-  if (location) meta += ` · 📍 ${location}`
-  return `🛰️ **AK-01 · scheepslogboek**\n\`${command}\`\n${meta}`
+export function formatLogMessage({ ip, lang, command, location, isp }) {
+  const lines = ['🛰️ **AK-01 · scheepslogboek**', `\`${command}\``, '']
+  lines.push(lang ? `${ip} · ${lang}` : ip)
+  if (location) lines.push(`📍 ${location}`)
+  if (isp) lines.push(`🌐 ${isp}`)
+  return lines.join('\n')
 }

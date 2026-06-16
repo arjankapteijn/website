@@ -64,6 +64,25 @@ canvas {
 .hud--bl { bottom: 18px; left: 22px; }
 .hud--br { bottom: 18px; right: 22px; text-align: right; }
 
+/* social-iconen rechtsonder: geen onderstreping, subtiele hover */
+.hud--social {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
+.hud--social a {
+  border-bottom: none;
+  display: inline-flex;
+  line-height: 0;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.hud--social a:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
 .hud strong {
   display: block;
   font-size: 13px;

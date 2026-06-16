@@ -9,6 +9,7 @@ export const profile = {
   email: 'info@arjankapteijn.nl',
 
   linkedin: 'https://www.linkedin.com/in/arjankapteijn/',
+  github: 'https://github.com/arjankapteijn/website',
 
   photo: '/photo.webp',
 }

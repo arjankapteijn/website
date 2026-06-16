@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { formatLocation, isPublicIp } from './geo.js'
+import { parseGeo, isPublicIp } from './geo.js'
 
 describe('isPublicIp', () => {
   it('accepteert publieke adressen', () => {
@@ -29,24 +29,27 @@ describe('isPublicIp', () => {
   })
 })
 
-describe('formatLocation', () => {
-  it('maakt "Stad, LL" van een geslaagde respons', () => {
+describe('parseGeo', () => {
+  it('maakt { location: "Stad, LL", isp } van een geslaagde respons', () => {
     expect(
-      formatLocation({ status: 'success', city: 'Amsterdam', countryCode: 'NL', country: 'The Netherlands' }),
-    ).toBe('Amsterdam, NL')
+      parseGeo({ status: 'success', city: 'Amsterdam', countryCode: 'NL', country: 'The Netherlands', isp: 'KPN B.V.' }),
+    ).toEqual({ location: 'Amsterdam, NL', isp: 'KPN B.V.' })
   })
 
   it('valt terug op de landnaam als de code ontbreekt', () => {
-    expect(formatLocation({ status: 'success', city: 'Berlin', country: 'Germany' })).toBe('Berlin, Germany')
+    expect(parseGeo({ status: 'success', city: 'Berlin', country: 'Germany' })).toEqual({
+      location: 'Berlin, Germany',
+      isp: null,
+    })
   })
 
   it('geeft alleen het land als de stad ontbreekt', () => {
-    expect(formatLocation({ status: 'success', countryCode: 'FR' })).toBe('FR')
+    expect(parseGeo({ status: 'success', countryCode: 'FR' })).toEqual({ location: 'FR', isp: null })
   })
 
-  it('geeft null bij een mislukte of lege respons', () => {
-    expect(formatLocation({ status: 'fail', message: 'reserved range' })).toBeNull()
-    expect(formatLocation({})).toBeNull()
-    expect(formatLocation(null)).toBeNull()
+  it('geeft null-velden bij een mislukte of lege respons', () => {
+    expect(parseGeo({ status: 'fail', message: 'reserved range' })).toEqual({ location: null, isp: null })
+    expect(parseGeo({})).toEqual({ location: null, isp: null })
+    expect(parseGeo(null)).toEqual({ location: null, isp: null })
   })
 })
