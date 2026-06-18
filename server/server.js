@@ -69,7 +69,7 @@ const SECURITY_HEADERS = {
     // blob: — GLTFLoader laadt texturen die in het .glb-model zitten als blob-URL
     "img-src 'self' data: blob:",
     // blob: — three.js haalt model-texturen met fetch() op via blob-URL's
-    "connect-src 'self' blob: https://api.wheretheiss.at https://api.ipify.org",
+    "connect-src 'self' blob: https://api.wheretheiss.at https://api64.ipify.org",
     "worker-src 'self' blob:",
     "frame-ancestors 'none'",
     "base-uri 'none'",
