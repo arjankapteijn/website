@@ -8,7 +8,7 @@ let ipPromise: Promise<string | null> | null = null
 
 export function getIp(): Promise<string | null> {
   if (cachedIp) return Promise.resolve(cachedIp)
-  ipPromise ??= fetch('https://api.ipify.org?format=json')
+  ipPromise ??= fetch('https://api64.ipify.org?format=json')
     .then((r) => (r.ok ? r.json() : null))
     .then((j) => {
       cachedIp = j?.ip ?? null
@@ -16,6 +16,16 @@ export function getIp(): Promise<string | null> {
     })
     .catch(() => null)
   return ipPromise
+}
+
+/**
+ * Kort een IPv6-adres in voor weergave: alleen de eerste 3 hex-groepen
+ * + `…`, zodat het net zo compact blijft als een IPv4-adres en het
+ * interface-deel niet zichtbaar is. IPv4-adressen blijven ongewijzigd.
+ */
+export function shortIp(ip: string): string {
+  if (!ip.includes(':')) return ip
+  return ip.split(':').slice(0, 3).join(':') + '…'
 }
 
 /** Het IP van de bezoeker, getoond in de terminalprompt. */

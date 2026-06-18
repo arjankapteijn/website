@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { profile } from '../config'
 import { strings, type Lang, type TermLine } from '../i18n'
 import { fetchIss } from '../hooks/useIss'
-import { logCommand, useIp } from '../lib/log'
+import { logCommand, shortIp, useIp } from '../lib/log'
 import { mailtoUrl, sendEmail } from '../lib/mail'
 
 type EmailStep = 'none' | 'subject' | 'body' | 'reply' | 'confirm'
@@ -34,7 +34,7 @@ interface TerminalProps {
 export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) {
   const t = strings[lang].term
   const ip = useIp()
-  const user = ip ?? (lang === 'nl' ? 'bezoeker' : 'visitor')
+  const user = ip ? shortIp(ip) : lang === 'nl' ? 'bezoeker' : 'visitor'
 
   // bootregels staan los van de rest: de opstartanimatie zet steeds de
   // eerste n regels (idempotent) zodat een dubbele effect-run — StrictMode
