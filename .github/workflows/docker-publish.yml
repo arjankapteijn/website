@@ -81,6 +81,16 @@ jobs:
             echo "major_minor=${MA}.${MI}"
           } >> "$GITHUB_OUTPUT"
 
+      # Maakt bij een nieuwe auto-versie een GitHub Release aan met een
+      # changelog dat GitHub afleidt uit de PR's/commits sinds de vorige tag.
+      # Alleen bij push naar main (dan is version gezet); bij een handmatige
+      # v*-tag kun je desgewenst zelf een release maken.
+      - name: GitHub Release aanmaken
+        if: steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "v${{ steps.version.outputs.version }}" --generate-notes --title "v${{ steps.version.outputs.version }}"
+
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Log in bij ghcr.io
