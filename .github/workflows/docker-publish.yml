@@ -76,25 +76,38 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v$new" -m "Release v$new"
           git push origin "v$new"
+          # Changelog uit de commit-onderwerpen sinds de vorige tag. We leiden
+          # dit zelf af (i.p.v. gh --generate-notes) zodat ook commits die
+          # rechtstreeks naar main gaan — zonder PR — in de release belanden.
+          notes="$RUNNER_TEMP/release-notes.md"
+          {
+            echo "## What's Changed"
+            git log "${last}..HEAD" --no-merges --format='* %s (%h)'
+            echo ""
+            if [ "$last" != v0.0.0 ]; then
+              echo "**Full Changelog**: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${last}...v${new}"
+            fi
+          } > "$notes"
           {
             echo "version=$new"
             echo "major_minor=${MA}.${MI}"
+            echo "notes_file=$notes"
           } >> "$GITHUB_OUTPUT"
 
-      # Maakt bij een nieuwe auto-versie een GitHub Release aan met een
-      # changelog dat GitHub afleidt uit de PR's/commits sinds de vorige tag.
+      # Maakt bij een nieuwe auto-versie een GitHub Release aan met het
+      # changelog dat in de vorige stap uit de commits is opgebouwd.
       # Alleen bij push naar main (dan is version gezet); bij een handmatige
       # v*-tag kun je desgewenst zelf een release maken.
       - name: GitHub Release aanmaken
         if: steps.version.outputs.version != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "v${{ steps.version.outputs.version }}" --generate-notes --title "v${{ steps.version.outputs.version }}"
+        run: gh release create "v${{ steps.version.outputs.version }}" --notes-file "${{ steps.version.outputs.notes_file }}" --title "v${{ steps.version.outputs.version }}"
 
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
 
       - name: Log in bij ghcr.io
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -102,7 +115,7 @@ jobs:
 
       - name: Tags & labels bepalen
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
         with:
           images: ${{ env.IMAGE }}
           tags: |
@@ -117,7 +130,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - name: Bouwen en pushen
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
         with:
           context: .
           platforms: linux/amd64
