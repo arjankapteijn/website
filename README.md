@@ -29,11 +29,13 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | Live ISS-data | [wheretheiss.at API](https://wheretheiss.at/w/developer) (satelliet 25544, geen key nodig) |
 | E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
 | Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`), met grove herkomst per IP via [ip-api.com](https://ip-api.com) (`server/geo.js`) |
+| IP-lookup | [api64.ipify.org](https://www.ipify.org) (client-side, eenmalig per sessie) — haalt het publieke IP van de bezoeker op voor de terminalprompt en het scheepslogboek |
 | Zonnepanelen | live vermogen van de echte zonnepanelen via [SolarEdge Monitoring API](https://monitoring.solaredge.com) (`server/server.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
 | Hosting | Docker-container op TrueNAS, achter Nginx Proxy Manager (Let's Encrypt) |
 
-Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd
-— geen runtime-afhankelijkheden van externe CDN's behalve de ISS-API.
+Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd.
+Runtime-afhankelijkheden van externe API's: ISS-telemetrie (wheretheiss.at),
+IP-lookup (api64.ipify.org) en server-side geo-lookup (ip-api.com).
 
 ## Terminal-commando's
 
