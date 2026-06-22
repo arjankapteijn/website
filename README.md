@@ -29,6 +29,7 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | Live ISS-data | [wheretheiss.at API](https://wheretheiss.at/w/developer) (satelliet 25544, geen key nodig) |
 | E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
 | Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`), met grove herkomst per IP via [ip-api.com](https://ip-api.com) (`server/geo.js`) |
+| Zonnepanelen | live vermogen van de echte zonnepanelen via [SolarEdge Monitoring API](https://monitoring.solaredge.com) (`server/server.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
 | Hosting | Docker-container op TrueNAS, achter Nginx Proxy Manager (Let's Encrypt) |
 
 Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd
@@ -44,7 +45,6 @@ Klik op het MacBook-scherm en typ:
 | `about` / `bio` | wie is Arjan? |
 | `whoami` | naam + titel |
 | `skills` | vaardigheden |
-| `contact` | e-mail & LinkedIn |
 | `email` | stuur een e-mail vanuit de terminal (onderwerp → bericht → optioneel antwoordadres → bevestigen; verzonden via SMTP2GO) |
 | `photo` / `open arjan.jpg` | opent de foto op het bureaublad |
 | `linkedin` | opent het LinkedIn-profiel |
@@ -72,7 +72,7 @@ npm run preview  # test de productiebuild lokaal
 - **Identiteit & links** — `src/config.ts` (naam, e-mail, LinkedIn, foto-pad).
 - **Teksten per taal** — `src/i18n.ts` (bio, titel, skills, alle UI- en
   terminalteksten; de TODO-markers wachten op echte content).
-- **Foto** — `public/photo.jpg` (vierkant, 800×800).
+- **Foto** — `public/photo.webp` (vierkant, 800×800).
 - **Terminal-commando's** — `src/components/Terminal.tsx`.
 
 ### Taaldetectie
@@ -151,6 +151,7 @@ services:
       - /tmp:size=8m
     mem_limit: 256m
     pids_limit: 64
+    pull_policy: always
 ```
 
 (De host-login bij ghcr.io uit de vorige stap geldt ook hier.) Zodra
@@ -191,31 +192,35 @@ Lokaal de productieversie testen: `npm run build && npm start`
 
 ### Versies / releases
 
-Elke push naar `main` verschuift de `latest`-tag (waar de TrueNAS-app op
-volgt → Update-knop). Voor een traceerbare release maak je daarnaast een
-git-tag aan:
+**Releasen = gewoon pushen naar `main`.** De `docker-publish.yml`-workflow
+doet de rest automatisch:
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+1. Leidt de volgende semver-tag af uit de commits sinds de laatste tag via
+   **conventional commits**: `feat:` → minor, `!`/`BREAKING CHANGE` → major,
+   anders patch.
+2. Maakt de git-tag aan en pusht hem.
+3. Maakt automatisch een **GitHub Release** aan met een changelog uit de
+   commit-onderwerpen.
+4. Bouwt en pusht het image naar ghcr.io met tags `:latest`, `:x.y.z`,
+   `:x.y` en `:sha-<short>`.
 
-GitHub Actions bouwt dan extra image-tags op ghcr.io:
+Schrijf dus altijd **conventional commit-messages** (`feat:`, `fix:`,
+`chore:`, `docs:`, `ci:`) — de versie-bump hangt daarvan af.
+`package.json` hoef je **niet** te bumpen; de git-tag is de single source
+of truth.
 
-| Git-tag  | Image-tags                          |
-|----------|-------------------------------------|
-| `v1.2.3` | `:1.2.3`, `:1.2` (+ ongewijzigd `:latest` vanaf main) |
+Doc-only pushes (`**.md`, `docs/**`) slaan versie-bump én image-build over.
 
-Zo kun je:
+Een handmatige `v*`-tag-push werkt ook en bouwt altijd.
 
-- **Terugrollen:** zet de app tijdelijk op een vaste versie, bijv.
-  `image: ghcr.io/arjankapteijn/website:1.1.0`, en herstart.
-- **Pinnen met patch-updates:** gebruik `:1.2` om binnen een minor-versie
-  automatische patches mee te krijgen, zonder sprong naar een nieuwe minor.
+| Scenario | Image-tags |
+|---|---|
+| Push naar `main` | `:latest`, `:x.y.z`, `:x.y`, `:sha-<short>` |
+| Handmatige `v1.2.3`-tag | `:1.2.3`, `:1.2` |
 
-De TrueNAS-app blijft standaard op `:latest` staan, dus de Update-knop
-werkt gewoon door; de versie-tags zijn er puur voor traceerbaarheid en
-rollback.
+De TrueNAS-app staat op `:latest` met `pull_policy: always`, dus de
+Update-knop pakt vanzelf de nieuwste versie. Pinnen op een vaste tag
+(bijv. `:1.1.0`) is mogelijk voor deterministisch rollback.
 
 ## Live ISS-data
 
@@ -275,6 +280,27 @@ Signal-melding (bewuste keuze). E-mailinhoud (onderwerp/bericht) wordt
 meldt niet dát er gelogd wordt — vermeld dit dus zelf in een
 privacyverklaring. Houd er rekening mee dat je hiermee bezoekers-IP's naar
 een Signal-kanaal stuurt.
+
+## Zonnepanelen (SolarEdge)
+
+Het accuicoontje (🔋) in de menubalk toont het **live vermogen van de echte
+zonnepanelen** als percentage van het piekvermogen (2,7 kWp). Klikken opent
+een modal met vandaag-opbrengst, maandopbrengst en lifetime-totaal.
+
+De data komt van de [SolarEdge Monitoring API](https://monitoring.solaredge.com)
+via `/api/solar`. De server cachet de respons (standaard 15 min) om binnen de
+gratis daglimiet van SolarEdge (~300 calls/dag) te blijven.
+
+Configuratie via `.env` (zie [.env.example](.env.example)):
+
+```env
+SOLAREDGE_API_KEY=vul-hier-je-api-key-in
+SOLAREDGE_SITE_ID=vul-hier-je-site-id-in
+```
+
+Zonder configuratie (of op statische hosting) toont de menubalk een statisch
+accuicoontje en is de modal niet bereikbaar. E-mailinhoud wordt nooit
+meegestuurd naar SolarEdge.
 
 ## Credits & licenties
 
