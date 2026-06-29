@@ -195,6 +195,17 @@
 .term-line--err { color: #ff7b72; }
 .term-line--dim { color: rgba(214, 228, 214, 0.55); }
 
+.term-link {
+  color: #79c0ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.term-link:hover {
+  color: #a5d6ff;
+}
+
 .term-prompt-row {
   display: flex;
   align-items: baseline;
