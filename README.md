@@ -58,7 +58,9 @@ Klik op het MacBook-scherm en typ:
 | `sudo …`, `exit` | probeer maar 😄 |
 
 Pijltje omhoog/omlaag bladert door de commandogeschiedenis. De foto op het
-bureaublad is ook direct aanklikbaar.
+bureaublad is ook direct aanklikbaar. Links in de terminaluitvoer (zoals
+`vavox.nl` in `about`) zijn klikbaar; alleen `http(s)`- en `mailto:`-schema's
+worden als link gerenderd, de rest blijft platte tekst (XSS-veilig).
 
 ## Ontwikkelen
 
@@ -76,6 +78,8 @@ npm run preview  # test de productiebuild lokaal
   terminalteksten; de TODO-markers wachten op echte content).
 - **Foto** — `public/photo.webp` (vierkant, 800×800).
 - **Terminal-commando's** — `src/components/Terminal.tsx`.
+- **SEO & deelbaarheid** — `index.html` (meta-description, canonical,
+  Open Graph + Twitter card, en `Person`-structured-data voor Google).
 
 ### Taaldetectie
 
