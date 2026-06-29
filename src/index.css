@@ -217,6 +217,11 @@ canvas {
   color: rgba(214, 224, 245, 0.88);
 }
 
+.photo-modal__bio a {
+  color: #79c0ff;
+  text-underline-offset: 2px;
+}
+
 .photo-modal__actions {
   display: flex;
   gap: 10px;

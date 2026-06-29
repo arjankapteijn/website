@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { profile } from '../config'
 import { strings, type Lang } from '../i18n'
+import { renderMarkdownLinks } from '../lib/markdown'
 
 interface PhotoModalProps {
   lang: Lang
@@ -32,7 +33,7 @@ export default function PhotoModal({ lang, onClose, onEmail }: PhotoModalProps) 
             </p>
           </div>
         </div>
-        <p className="photo-modal__bio">{t.bio.join(' ')}</p>
+        <p className="photo-modal__bio">{renderMarkdownLinks(t.bio.join(' '))}</p>
         <div className="photo-modal__actions">
           <a href={profile.linkedin} target="_blank" rel="noreferrer">
             LinkedIn

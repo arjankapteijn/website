@@ -7,6 +7,7 @@ import SolarModal from './components/SolarModal'
 import { profile } from './config'
 import { detectLang, saveLang, strings, type Lang } from './i18n'
 import { ISS_INTERVAL_MS, useIss } from './hooks/useIss'
+import { renderMarkdownLinks } from './lib/markdown'
 
 export default function App() {
   const [photoOpen, setPhotoOpen] = useState(false)
@@ -119,7 +120,7 @@ export default function App() {
       {/* Voor zoekmachines en screenreaders — tevens het main-landmark */}
       <main className="visually-hidden">
         <h1>{profile.name}</h1>
-        <p>{t.bio.join(' ')}</p>
+        <p>{renderMarkdownLinks(t.bio.join(' '))}</p>
         <a href={profile.linkedin}>LinkedIn — {profile.name}</a>
         <a href={`mailto:${profile.email}`}>E-mail — {profile.name}</a>
       </main>

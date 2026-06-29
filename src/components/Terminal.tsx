@@ -4,6 +4,7 @@ import { strings, type Lang, type TermLine } from '../i18n'
 import { fetchIss } from '../hooks/useIss'
 import { logCommand, shortIp, useIp } from '../lib/log'
 import { mailtoUrl, sendEmail } from '../lib/mail'
+import { renderMarkdownLinks } from '../lib/markdown'
 
 type EmailStep = 'none' | 'subject' | 'body' | 'reply' | 'confirm'
 
@@ -24,59 +25,6 @@ const APPLE_ART = [
   '   ##############   ',
   '    ####   ####     ',
 ].map((l) => l.padEnd(20))
-
-// markeert [label](url)-stukken in een terminalregel als klikbare link;
-// gewone tekst (incl. bestandsnamen als arjan.jpg of versies als 4.2.0)
-// blijft ongemoeid omdat alleen expliciet gemarkeerde stukken matchen
-const MD_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g
-
-// renderText linkificeert óók teruggeëchote bezoekersinvoer, dus alleen
-// expliciet veilige schema's toestaan. Zo kan niemand via 'echo [x](javascript:…)'
-// of een data:-URL een klikbare XSS-link in de terminal injecteren — we leunen
-// hiervoor bewust niet op React's interne javascript:-blokkade alleen.
-//
-// We laten de browser's eigen URL-parser het schema bepalen (robuuster dan een
-// regex: normaliseert spaties, control-chars en hoofdletters). Relatieve links
-// en ankers erven het http(s)-schema van de pagina en zijn dus ook toegestaan.
-const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:'])
-
-function isSafeHref(url: string): boolean {
-  try {
-    return SAFE_SCHEMES.has(new URL(url, window.location.origin).protocol)
-  } catch {
-    return false
-  }
-}
-
-function renderText(text: string) {
-  if (!text.includes('](')) return text
-  const out: React.ReactNode[] = []
-  let last = 0
-  for (const m of text.matchAll(MD_LINK_RE)) {
-    const idx = m.index ?? 0
-    if (idx > last) out.push(text.slice(last, idx))
-    if (isSafeHref(m[2])) {
-      out.push(
-        <a
-          key={idx}
-          href={m[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="term-link"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {m[1]}
-        </a>,
-      )
-    } else {
-      // onveilig schema: laat de regel ongemoeid als platte tekst staan
-      out.push(m[0])
-    }
-    last = idx + m[0].length
-  }
-  if (last < text.length) out.push(text.slice(last))
-  return out
-}
 
 interface TerminalProps {
   lang: Lang
@@ -396,7 +344,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
     <div className="term-body" ref={bodyRef} onClick={() => inputRef.current?.focus()}>
       {[...bootLines, ...lines].map((line, i) => (
         <div key={i} className={`term-line${line?.cls ? ` term-line--${line.cls}` : ''}`}>
-          {renderText(line?.text ?? '')}
+          {renderMarkdownLinks(line?.text ?? '', 'term-link')}
         </div>
       ))}
       {booted && (
