@@ -29,14 +29,15 @@ const nl = {
   // TODO: schrijf hier je eigen bio
   bio: [
     'Hoi! Ik ben Arjan Kapteijn, IT-consultant en softwaredeveloper.',
+    'Ik bouw o.a. Vavox ([vavox.nl](https://vavox.nl)), een AI-callcenterplatform op basis van Amazon Connect.',
     'Welkom aan boord van mijn persoonlijke ruimtestation.',
     'Hier vertel ik binnenkort meer over wie ik ben en wat ik doe.',
     'Tot die tijd: kijk gerust rond, of stuur me een bericht.',
   ],
   skills: [
+    'Amazon Connect Customer (callcentersoftware)',
     'PHP & Laravel-development',
     "API's & systeemkoppelingen",
-    'AI-integraties (o.a. OpenAI)',
     'Procesoptimalisatie',
   ],
 
@@ -211,14 +212,15 @@ const en: typeof nl = {
   // TODO: write your own bio
   bio: [
     "Hi! I'm Arjan Kapteijn, IT consultant and software developer.",
+    'I build Vavox ([vavox.nl](https://vavox.nl)), an AI contact-center platform built on Amazon Connect.',
     'Welcome aboard my personal space station.',
     "Soon I'll share more here about who I am and what I do.",
     'Until then: feel free to look around, or send me a message.',
   ],
   skills: [
+    'Amazon Connect Customer (call center software)',
     'PHP & Laravel development',
     'APIs & system integrations',
-    'AI integrations (incl. OpenAI)',
     'Process optimisation',
   ],
 
