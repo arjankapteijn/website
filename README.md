@@ -164,6 +164,55 @@ services:
 GitHub Actions een nieuw image onder de `latest`-tag pusht, toont TrueNAS
 bij de app een **Update**-knop — één klik en de nieuwe versie draait.
 
+### Custom-icoon in de Apps-UI
+
+Custom apps hebben geen icoon-veld in de YAML; het icoon komt uit de
+app-metadata in `/mnt/.ix-apps/metadata.yaml`. Onder het `arjankapteijn`-blok
+staat, binnen `"metadata":`, een `icon`-regel:
+
+```yaml
+    "icon": "https://arjankapteijn.nl/favicon.svg"
+```
+
+> **Let op:** TrueNAS kan `metadata.yaml` bij een app-**update** overschrijven,
+> waardoor het icoon verdwijnt. Zet 'm dan met onderstaand blokje opnieuw.
+> Bewerk dit systeembestand nooit blind: **valideer de YAML vóór je 'm
+> toepast**, anders toont de Apps-pagina "No Applications Installed".
+
+```bash
+# 1) backup
+cp /mnt/.ix-apps/metadata.yaml /mnt/.ix-apps/metadata.yaml.bak
+
+# 2) voeg de icon-regel toe aan het arjankapteijn-blok (naar /tmp)
+awk '
+  /^"arjankapteijn":/ {inapp=1}
+  /^"[a-z]/ && !/^"arjankapteijn":/ {inapp=0}
+  {print}
+  inapp && /^  "metadata":/ && !done {
+    print "    \"icon\": \"https://arjankapteijn.nl/favicon.svg\""
+    done=1
+  }
+' /mnt/.ix-apps/metadata.yaml.bak > /tmp/meta.new
+
+# 3) valideer en pas alleen bij geldige YAML toe
+python3 -c "import yaml; yaml.safe_load(open('/tmp/meta.new')); print('OK')" \
+  && cp /tmp/meta.new /mnt/.ix-apps/metadata.yaml \
+  && echo "toegepast" \
+  || echo "ONGELDIG - niets gewijzigd, backup staat nog"
+```
+
+Ververs daarna de Apps-pagina (F5); zo nodig de app stop/start zodat de
+middleware de metadata opnieuw inleest. Controleer met:
+
+```bash
+awk '/^"arjankapteijn":/{f=1} f&&/^"[a-z]/&&!/^"arjankapteijn":/{exit} f{print}' \
+  /mnt/.ix-apps/metadata.yaml
+```
+
+Er hoort **precies één** `"icon":`-regel in het blok te staan. Raakt het bestand
+tóch stuk (Apps-pagina leeg), zet dan de backup terug:
+`cp /mnt/.ix-apps/metadata.yaml.bak /mnt/.ix-apps/metadata.yaml`.
+
 ### Achter Nginx Proxy Manager (Let's Encrypt)
 
 1. NPM → **Hosts → Proxy Hosts → Add**:
