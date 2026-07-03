@@ -18,6 +18,8 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 ![Three.js](https://img.shields.io/badge/Three.js-000000?logo=threedotjs&logoColor=white)
 ![Container](https://img.shields.io/badge/image-ghcr.io-2496ED?logo=docker&logoColor=white)
 
+![Screenshot van de site: een zwevende MacBook boven de aarde met een terminal erop](docs/screenshot.png)
+
 ## Stack
 
 | Onderdeel | Technologie |
