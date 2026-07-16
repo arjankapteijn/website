@@ -80,7 +80,7 @@ export default function Earth({ iss }: { iss: IssData | null }) {
 
   // De aarde reageert alleen op het 'echte' zonlicht (laag 1), niet op de
   // sfeerverlichting van de laptop. Elke render opnieuw zodat ook later
-  // toegevoegde objecten (marker, spoor) meegaan — goedkoop, ~10 objecten.
+  // toegevoegde objecten (marker, spoor) meegaan - goedkoop, ~10 objecten.
   useEffect(() => {
     group.current.traverse((o) => o.layers.set(1))
   })

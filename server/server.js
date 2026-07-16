@@ -66,9 +66,9 @@ const SECURITY_HEADERS = {
     "default-src 'self'",
     "script-src 'self' 'wasm-unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
-    // blob: — GLTFLoader laadt texturen die in het .glb-model zitten als blob-URL
+    // blob: - GLTFLoader laadt texturen die in het .glb-model zitten als blob-URL
     "img-src 'self' data: blob:",
-    // blob: — three.js haalt model-texturen met fetch() op via blob-URL's
+    // blob: - three.js haalt model-texturen met fetch() op via blob-URL's
     "connect-src 'self' blob: https://api.wheretheiss.at https://api64.ipify.org",
     "worker-src 'self' blob:",
     "frame-ancestors 'none'",
@@ -227,7 +227,7 @@ async function handleEmailPost(req, res) {
   const text = [
     body,
     '',
-    '—',
+    '--',
     `Verzonden via de terminal op arjankapteijn.nl/.com`,
     `IP: ${ip} · taal: ${lang} · ${new Date().toISOString()}`,
     replyTo ? `Antwoorden kan naar: ${replyTo}` : 'Geen antwoordadres opgegeven.',
@@ -254,7 +254,7 @@ async function handleEmailPost(req, res) {
 
 // ─── Zonnepanelen via SolarEdge ─────────────────────────────────────────
 // SolarEdge hanteert een daglimiet (~300 calls); de server cachet daarom
-// 15 minuten en de API-key blijft hier — nooit richting de browser.
+// 15 minuten en de API-key blijft hier - nooit richting de browser.
 
 const SOLAR = {
   key: process.env.SOLAREDGE_API_KEY || '',

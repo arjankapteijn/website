@@ -11,7 +11,7 @@ on:
   push:
     branches: [main]
     # doc-only commits hoeven geen image te bouwen / versie te bumpen.
-    # NB: path-filters gelden niet voor tag-pushes — releases (v*) bouwen altijd.
+    # NB: path-filters gelden niet voor tag-pushes - releases (v*) bouwen altijd.
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -57,12 +57,12 @@ jobs:
             echo "Laatste tag: $last"
             # Niets te doen als HEAD al een tag heeft.
             if git describe --tags --exact-match HEAD >/dev/null 2>&1; then
-              echo "HEAD is al getagd — geen nieuwe versie."
+              echo "HEAD is al getagd - geen nieuwe versie."
               exit 0
             fi
             range="${last}..HEAD"
           else
-            echo "Nog geen tag — eerste release; alle commits meenemen."
+            echo "Nog geen tag - eerste release; alle commits meenemen."
             range="HEAD"
           fi
           msgs=$(git log $range --format='%s%n%b')
@@ -85,7 +85,7 @@ jobs:
           git push origin "v$new"
           # Changelog uit de commit-onderwerpen sinds de vorige tag. We leiden
           # dit zelf af (i.p.v. gh --generate-notes) zodat ook commits die
-          # rechtstreeks naar main gaan — zonder PR — in de release belanden.
+          # rechtstreeks naar main gaan - zonder PR - in de release belanden.
           notes="$RUNNER_TEMP/release-notes.md"
           {
             echo "## What's Changed"

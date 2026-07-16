@@ -72,7 +72,7 @@ export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
           <span className="term-dot term-dot--red" />
           <span className="term-dot term-dot--yellow" />
           <span className="term-dot term-dot--green" />
-          <span className="term-title">{ip ? shortIp(ip) : lang === 'nl' ? 'bezoeker' : 'visitor'}@ak-01 — zsh</span>
+          <span className="term-title">{ip ? shortIp(ip) : lang === 'nl' ? 'bezoeker' : 'visitor'}@ak-01 - zsh</span>
         </div>
         <Terminal lang={lang} setLang={setLang} onOpenPhoto={onOpenPhoto} />
       </div>

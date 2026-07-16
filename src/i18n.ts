@@ -44,7 +44,7 @@ const nl = {
   solar: {
     title: 'Zonnepanelen',
     subtitle: 'station AK-01 · energievoorziening',
-    batteryTitle: 'Accu — live gevoed door echte zonnepanelen (klik voor meer)',
+    batteryTitle: 'Accu - live gevoed door echte zonnepanelen (klik voor meer)',
     intro:
       'De accu van deze MacBook loopt op échte zonne-energie: het percentage in de menubalk is het actuele vermogen van mijn zonnepanelen thuis.',
     current: 'huidig vermogen',
@@ -54,7 +54,7 @@ const nl = {
     lifetime: 'totaal opgewekt',
     inverter: 'omvormer',
     panels: 'panelen',
-    noData: 'Live-data is even niet beschikbaar — de zon schijnt vast ergens anders.',
+    noData: 'Live-data is even niet beschikbaar - de zon schijnt vast ergens anders.',
     source: 'bron: SolarEdge-monitoring',
     updated: 'meting',
   },
@@ -80,7 +80,7 @@ const nl = {
 
   term: {
     boot: [
-      { text: 'AK-OS 1.0 — verbinding met station AK-01…', cls: 'dim' },
+      { text: 'AK-OS 1.0 - verbinding met station AK-01…', cls: 'dim' },
       { text: '[ ok ] zonnepanelen uitgelijnd', cls: 'ok' },
       { text: '[ ok ] zwaartekracht uitgeschakeld', cls: 'ok' },
       { text: '[ ok ] koffie aan boord', cls: 'ok' },
@@ -107,15 +107,15 @@ const nl = {
     emailSubjectAsk: 'Wat is het onderwerp? (Enter om te bevestigen, Ctrl+C om te annuleren)',
     emailSubjectEmpty: 'Een leeg onderwerp komt niet door de luchtsluis. Probeer opnieuw.',
     emailBodyAsk: 'En je bericht? (één regel, Enter om te bevestigen)',
-    emailBodyEmpty: 'Leeg bericht — toch iets typen graag.',
-    emailReplyAsk: 'Je e-mailadres voor een antwoord? (optioneel — Enter om over te slaan)',
+    emailBodyEmpty: 'Leeg bericht - toch iets typen graag.',
+    emailReplyAsk: 'Je e-mailadres voor een antwoord? (optioneel - Enter om over te slaan)',
     emailReplyInvalid: 'Dat ziet er niet uit als een e-mailadres. Probeer opnieuw of laat leeg.',
     emailTo: 'Aan',
     emailSubject: 'Onderwerp',
     emailBody: 'Bericht',
     emailSending: 'Verzenden via station AK-01… 📡',
     emailSent: 'Verzonden! Arjan leest je bericht zodra de zonnepanelen weer vol staan. ✅',
-    emailFallback: 'Direct verzenden lukte even niet — je e-mailprogramma wordt geopend.',
+    emailFallback: 'Direct verzenden lukte even niet - je e-mailprogramma wordt geopend.',
     emailCancelled: 'Verzending geannuleerd.',
     promptSubject: 'onderwerp> ',
     promptBody: 'bericht> ',
@@ -127,14 +127,14 @@ const nl = {
     openNotFound: (arg: string) => `open: kan '${arg || '?'}' niet vinden`,
     lsFiles: 'arjan.jpg     over-mij.txt     .geheimen',
     catSecret: 'cat: .geheimen: toegang geweigerd 🔒',
-    catPhoto: "cat: arjan.jpg is een afbeelding — probeer 'open arjan.jpg'",
+    catPhoto: "cat: arjan.jpg is een afbeelding - probeer 'open arjan.jpg'",
     catNotFound: (arg: string) => `cat: ${arg || '?'}: bestand niet gevonden`,
     catAboutFile: 'over-mij.txt',
     issFetching: 'Live ISS-data ophalen via wheretheiss.at…',
     issError: 'Kon het ISS even niet bereiken. Probeer het zo nog eens.',
     issReport: (d: { latitude: number; longitude: number; altitude: number; velocity: number; visibility: string }) =>
       [
-        { text: 'Internationaal ruimtestation (ISS) — live:', cls: 'accent' },
+        { text: 'Internationaal ruimtestation (ISS) - live:', cls: 'accent' },
         { text: `  positie    ${d.latitude.toFixed(2)}°, ${d.longitude.toFixed(2)}°` },
         { text: `  hoogte     ${d.altitude.toFixed(1)} km` },
         { text: `  snelheid   ${Math.round(d.velocity).toLocaleString('nl-NL')} km/u` },
@@ -157,7 +157,7 @@ const nl = {
       { text: 'Het best bewaarde geheim van station AK-01:', cls: 'accent' },
       { text: 'het is tijd voor een biertje. 🍺', cls: 'accent' },
       { text: '' },
-      { text: 'Jij hebt zó ver gezocht — dat verdient een échte, op aarde.', cls: 'dim' },
+      { text: 'Jij hebt zó ver gezocht - dat verdient een échte, op aarde.', cls: 'dim' },
       { text: "Typ 'email' en we plannen er eentje. 🌍🍻", cls: 'ok' },
       { text: '' },
     ] as TermLine[],
@@ -199,8 +199,8 @@ const nl = {
     ],
     whoamiYou: (ip: string | null) =>
       ip
-        ? `Jij bent ${ip} — maar deze site gaat over Arjan Kapteijn 😉 (typ 'about')`
-        : "Een bezoeker zonder naam. Deze site gaat over Arjan Kapteijn — typ 'about'.",
+        ? `Jij bent ${ip} - maar deze site gaat over Arjan Kapteijn 😉 (typ 'about')`
+        : "Een bezoeker zonder naam. Deze site gaat over Arjan Kapteijn - typ 'about'.",
     fortune: 'A SQL query walks into a bar. He approaches two tables and says: "Mind if I join you?"',
   },
 }
@@ -227,7 +227,7 @@ const en: typeof nl = {
   solar: {
     title: 'Solar panels',
     subtitle: 'station AK-01 · power supply',
-    batteryTitle: 'Battery — live powered by real solar panels (click for more)',
+    batteryTitle: 'Battery - live powered by real solar panels (click for more)',
     intro:
       'This MacBook runs on real solar power: the percentage in the menu bar is the current output of my solar panels at home.',
     current: 'current output',
@@ -237,7 +237,7 @@ const en: typeof nl = {
     lifetime: 'lifetime total',
     inverter: 'inverter',
     panels: 'panels',
-    noData: 'Live data is unavailable right now — the sun must be shining elsewhere.',
+    noData: 'Live data is unavailable right now - the sun must be shining elsewhere.',
     source: 'source: SolarEdge monitoring',
     updated: 'measured',
   },
@@ -262,7 +262,7 @@ const en: typeof nl = {
 
   term: {
     boot: [
-      { text: 'AK-OS 1.0 — connecting to station AK-01…', cls: 'dim' },
+      { text: 'AK-OS 1.0 - connecting to station AK-01…', cls: 'dim' },
       { text: '[ ok ] solar panels aligned', cls: 'ok' },
       { text: '[ ok ] gravity disabled', cls: 'ok' },
       { text: '[ ok ] coffee on board', cls: 'ok' },
@@ -289,15 +289,15 @@ const en: typeof nl = {
     emailSubjectAsk: 'What is the subject? (Enter to confirm, Ctrl+C to cancel)',
     emailSubjectEmpty: 'An empty subject won’t make it through the airlock. Try again.',
     emailBodyAsk: 'And your message? (one line, Enter to confirm)',
-    emailBodyEmpty: 'Empty message — please type something.',
-    emailReplyAsk: 'Your e-mail address for a reply? (optional — Enter to skip)',
+    emailBodyEmpty: 'Empty message - please type something.',
+    emailReplyAsk: 'Your e-mail address for a reply? (optional - Enter to skip)',
     emailReplyInvalid: 'That doesn’t look like an e-mail address. Try again or leave empty.',
     emailTo: 'To',
     emailSubject: 'Subject',
     emailBody: 'Message',
     emailSending: 'Transmitting via station AK-01… 📡',
     emailSent: 'Sent! Arjan will read your message once the solar panels are fully charged. ✅',
-    emailFallback: 'Direct transmission failed — opening your e-mail client instead.',
+    emailFallback: 'Direct transmission failed - opening your e-mail client instead.',
     emailCancelled: 'Sending cancelled.',
     promptSubject: 'subject> ',
     promptBody: 'message> ',
@@ -309,14 +309,14 @@ const en: typeof nl = {
     openNotFound: (arg: string) => `open: cannot find '${arg || '?'}'`,
     lsFiles: 'arjan.jpg     about-me.txt     .secrets',
     catSecret: 'cat: .secrets: permission denied 🔒',
-    catPhoto: "cat: arjan.jpg is an image — try 'open arjan.jpg'",
+    catPhoto: "cat: arjan.jpg is an image - try 'open arjan.jpg'",
     catNotFound: (arg: string) => `cat: ${arg || '?'}: file not found`,
     catAboutFile: 'about-me.txt',
     issFetching: 'Fetching live ISS data via wheretheiss.at…',
     issError: 'Couldn’t reach the ISS just now. Try again in a moment.',
     issReport: (d) =>
       [
-        { text: 'International Space Station (ISS) — live:', cls: 'accent' },
+        { text: 'International Space Station (ISS) - live:', cls: 'accent' },
         { text: `  position   ${d.latitude.toFixed(2)}°, ${d.longitude.toFixed(2)}°` },
         { text: `  altitude   ${d.altitude.toFixed(1)} km` },
         { text: `  velocity   ${Math.round(d.velocity).toLocaleString('en-GB')} km/h` },
@@ -339,7 +339,7 @@ const en: typeof nl = {
       { text: "Station AK-01's best-kept secret:", cls: 'accent' },
       { text: "it's time for a beer. 🍺", cls: 'accent' },
       { text: '' },
-      { text: 'You dug this deep — that earns a real one, back on Earth.', cls: 'dim' },
+      { text: 'You dug this deep - that earns a real one, back on Earth.', cls: 'dim' },
       { text: "Type 'email' and let's plan it. 🌍🍻", cls: 'ok' },
       { text: '' },
     ],
@@ -380,8 +380,8 @@ const en: typeof nl = {
     ],
     whoamiYou: (ip: string | null) =>
       ip
-        ? `You are ${ip} — but this site is about Arjan Kapteijn 😉 (type 'about')`
-        : "A nameless visitor. This site is about Arjan Kapteijn — type 'about'.",
+        ? `You are ${ip} - but this site is about Arjan Kapteijn 😉 (type 'about')`
+        : "A nameless visitor. This site is about Arjan Kapteijn - type 'about'.",
     fortune: 'A SQL query walks into a bar. He approaches two tables and says: "Mind if I join you?"',
   },
 }

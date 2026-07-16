@@ -38,8 +38,8 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   const user = ip ? shortIp(ip) : lang === 'nl' ? 'bezoeker' : 'visitor'
 
   // bootregels staan los van de rest: de opstartanimatie zet steeds de
-  // eerste n regels (idempotent) zodat een dubbele effect-run — StrictMode
-  // of een Suspense-replay tijdens het 3D-laden — nooit dubbele regels geeft
+  // eerste n regels (idempotent) zodat een dubbele effect-run - StrictMode
+  // of een Suspense-replay tijdens het 3D-laden - nooit dubbele regels geeft
   const [bootLines, setBootLines] = useState<TermLine[]>([])
   const [lines, setLines] = useState<TermLine[]>([])
   const [input, setInput] = useState('')

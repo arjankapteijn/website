@@ -2,7 +2,7 @@
 // voor in het scheepslogboek. Server-side, zero-dependency: leunt op globale
 // fetch. Gebruikt ip-api.com (gratis, geen key, 45 req/min). Het gratis plan
 // is HTTP-only; server-side is dat prima (geen mixed-content, CSP geldt alleen
-// in de browser). Faalt stil — lukt de lookup niet, dan gaat de logregel
+// in de browser). Faalt stil - lukt de lookup niet, dan gaat de logregel
 // gewoon zónder herkomst door.
 
 const GEO_URL = process.env.GEO_API_URL ?? 'http://ip-api.com/json'

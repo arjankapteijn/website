@@ -54,7 +54,7 @@ function terminalLog(): Plugin {
   }
 }
 
-// Dev-versie van /api/solar: zelfde gedrag als server/server.js — key uit
+// Dev-versie van /api/solar: zelfde gedrag als server/server.js - key uit
 // .env, 15 minuten cache (SolarEdge heeft een daglimiet), key blijft server-side.
 function solarProxy(): Plugin {
   let cache = { at: 0, body: '' }

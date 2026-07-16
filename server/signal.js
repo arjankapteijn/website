@@ -1,5 +1,5 @@
 // Minimale client voor de signal-cli-rest-api (bbernhard): één POST naar
-// /v2/send met {message, number, recipients}. Zero-dependency — leunt op
+// /v2/send met {message, number, recipients}. Zero-dependency - leunt op
 // de globale fetch (Node 18+). Een note-to-self bereik je door het eigen
 // geregistreerde nummer als recipient mee te geven.
 
@@ -27,8 +27,8 @@ export async function sendSignal({ url, number, recipients, message, textMode })
 
 /**
  * Eén logboekregel als styled Signal-bericht: vette kop, commando in
- * monospace, dan (na een lege regel) de herkomst — elk op een eigen regel
- * zodat het op mobiel niet inklapt. Tijd/datum laten we weg — die toont
+ * monospace, dan (na een lege regel) de herkomst - elk op een eigen regel
+ * zodat het op mobiel niet inklapt. Tijd/datum laten we weg - die toont
  * Signal zelf al. Verstuur met textMode 'styled'.
  * location/isp (optioneel) → grove herkomst, bijv. "📍 Amsterdam, NL" en
  * "🌐 KPN B.V.".

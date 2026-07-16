@@ -35,7 +35,7 @@ export default function Scene({ lang, setLang, onOpenPhoto, iss }: SceneProps) {
       <directionalLight position={[-40, 18, 10]} intensity={2.4} color="#fff4e0" />
       {/* Blauwe 'earthshine' vanaf de aarde */}
       <pointLight position={[6, -10, -30]} intensity={120} color="#3a6fd8" />
-      {/* Zachte vulling — schijnt ook op de nachtzijde van de aarde */}
+      {/* Zachte vulling - schijnt ook op de nachtzijde van de aarde */}
       <ambientLight ref={ambientRef} intensity={0.25} color="#9db4e8" />
 
       <Stars radius={120} depth={60} count={6000} factor={4} saturation={0} fade speed={0.4} />

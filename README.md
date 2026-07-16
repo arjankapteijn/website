@@ -5,7 +5,7 @@ aarde, met een interactieve terminal die bezoekers zelf kunnen bedienen.
 De HUD toont **live telemetrie van het echte ISS** en de site is tweetalig
 (Nederlands op `.nl`, Engels op `.com`).
 
-*Personal site of Arjan Kapteijn — a floating MacBook in low Earth orbit with
+*Personal site of Arjan Kapteijn - a floating MacBook in low Earth orbit with
 an interactive terminal. Dutch on `.nl`, English on `.com`.*
 
 [![CI](https://github.com/arjankapteijn/website/actions/workflows/ci.yml/badge.svg)](https://github.com/arjankapteijn/website/actions/workflows/ci.yml)
@@ -31,7 +31,7 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | Live ISS-data | [wheretheiss.at API](https://wheretheiss.at/w/developer) (satelliet 25544, geen key nodig) |
 | E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
 | Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`), met grove herkomst per IP via [ip-api.com](https://ip-api.com) (`server/geo.js`) |
-| IP-lookup | [api64.ipify.org](https://www.ipify.org) (client-side, eenmalig per sessie) — haalt het publieke IP van de bezoeker op voor de terminalprompt en het scheepslogboek |
+| IP-lookup | [api64.ipify.org](https://www.ipify.org) (client-side, eenmalig per sessie) - haalt het publieke IP van de bezoeker op voor de terminalprompt en het scheepslogboek |
 | Zonnepanelen | live vermogen van de echte zonnepanelen via [SolarEdge Monitoring API](https://monitoring.solaredge.com) (`server/server.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
 | Hosting | Docker-container op TrueNAS, achter Nginx Proxy Manager (Let's Encrypt) |
 
@@ -75,12 +75,12 @@ npm run preview  # test de productiebuild lokaal
 
 ## Personaliseren
 
-- **Identiteit & links** — `src/config.ts` (naam, e-mail, LinkedIn, foto-pad).
-- **Teksten per taal** — `src/i18n.ts` (bio, titel, skills, alle UI- en
+- **Identiteit & links** - `src/config.ts` (naam, e-mail, LinkedIn, foto-pad).
+- **Teksten per taal** - `src/i18n.ts` (bio, titel, skills, alle UI- en
   terminalteksten; de TODO-markers wachten op echte content).
-- **Foto** — `public/photo.webp` (vierkant, 800×800).
-- **Terminal-commando's** — `src/components/Terminal.tsx`.
-- **SEO & deelbaarheid** — `index.html` (meta-description, canonical,
+- **Foto** - `public/photo.webp` (vierkant, 800×800).
+- **Terminal-commando's** - `src/components/Terminal.tsx`.
+- **SEO & deelbaarheid** - `index.html` (meta-description, canonical,
   Open Graph + Twitter card, en `Person`-structured-data voor Google).
 
 ### Taaldetectie
@@ -96,13 +96,13 @@ De site draait als kleine, gehardende Docker-container
 multi-stage build (geen node_modules in het eindimage), draait als
 niet-root (uid 10001), `read_only` rootfs, alle capabilities gedropt,
 `no-new-privileges`, geheugen- en pids-limiet, en een healthcheck op
-`/healthz`. De rootfs is volledig read-only — er wordt niets weggeschreven
+`/healthz`. De rootfs is volledig read-only - er wordt niets weggeschreven
 (het logboek gaat via Signal).
 
 Het image wordt door **GitHub Actions** gebouwd en als privé-image naar
 **ghcr.io** gepusht (`ghcr.io/arjankapteijn/website`, zie
 [docker-publish.yml](.github/workflows/docker-publish.yml)). Op TrueNAS
-hoef je dus niet meer te klonen of te bouwen — alleen te pullen.
+hoef je dus niet meer te klonen of te bouwen - alleen te pullen.
 
 ### Eenmalig: inloggen bij ghcr.io
 
@@ -131,7 +131,7 @@ curl http://localhost:8090/healthz  # → ok
 
 NB: een container die je zo via SSH start draait prima (en herstart
 automatisch dankzij `restart: unless-stopped`), maar verschijnt **niet**
-op de Apps-pagina van TrueNAS — die toont alleen apps die via de eigen
+op de Apps-pagina van TrueNAS - die toont alleen apps die via de eigen
 middleware zijn geïnstalleerd. De "Containers"-toggle (Incus-virtualisatie
 voor VM's/LXC) staat hier ook los van en kan gewoon uit blijven.
 
@@ -164,7 +164,7 @@ services:
 
 (De host-login bij ghcr.io uit de vorige stap geldt ook hier.) Zodra
 GitHub Actions een nieuw image onder de `latest`-tag pusht, toont TrueNAS
-bij de app een **Update**-knop — één klik en de nieuwe versie draait.
+bij de app een **Update**-knop - één klik en de nieuwe versie draait.
 
 ### Custom-icoon in de Apps-UI
 
@@ -225,7 +225,7 @@ tóch stuk (Apps-pagina leeg), zet dan de backup terug:
 2. Tab **SSL**: *Request a new SSL certificate* (Let's Encrypt),
    **Force SSL** + **HTTP/2** aan.
 3. Herhaal voor `arjankapteijn.com, www.arjankapteijn.com` (zelfde
-   forward) — de site toont dan automatisch Engels.
+   forward) - de site toont dan automatisch Engels.
 4. DNS van beide domeinen → je publieke IP (A-record), en poort 80/443
    geforward naar NPM.
 
@@ -235,7 +235,7 @@ Signal-melding het echte bezoekers-IP zien.
 ### Updaten
 
 Push je naar `main`, dan bouwt GitHub Actions automatisch een nieuw image.
-Uitrollen kan dan op twee manieren — geen `git pull`, geen lokale build:
+Uitrollen kan dan op twee manieren - geen `git pull`, geen lokale build:
 
 - **TrueNAS Apps-UI:** klik op de **Update**-knop bij de app.
 - **Via SSH:**
@@ -262,7 +262,7 @@ doet de rest automatisch:
    `:x.y` en `:sha-<short>`.
 
 Schrijf dus altijd **conventional commit-messages** (`feat:`, `fix:`,
-`chore:`, `docs:`, `ci:`) — de versie-bump hangt daarvan af.
+`chore:`, `docs:`, `ci:`) - de versie-bump hangt daarvan af.
 `package.json` hoef je **niet** te bumpen; de git-tag is de single source
 of truth.
 
@@ -284,16 +284,16 @@ Update-knop pakt vanzelf de nieuwste versie. Pinnen op een vaste tag
 De site gebruikt `https://api.wheretheiss.at/v1/satellites/25544` (gratis,
 ±1 request/seconde toegestaan; de site pollt elke 15 s):
 
-- **HUD** — echte hoogte, snelheid, positie en of het ISS in het zonlicht
+- **HUD** - echte hoogte, snelheid, positie en of het ISS in het zonlicht
   of in de aardschaduw vliegt.
-- **ISS-marker op de globe** — een pulserende groene reticle op de actuele
+- **ISS-marker op de globe** - een pulserende groene reticle op de actuele
   positie, met een spoor van eerdere posities. De globe draait langzaam mee
   met het ISS, alsof station AK-01 ernaast meevliegt.
-- **Echte zonnestand** — het zonlicht op de aarde volgt het sub-solaire punt
+- **Echte zonnestand** - het zonlicht op de aarde volgt het sub-solaire punt
   (`solar_lat`/`solar_lon`), dus de dag/nacht-grens op de globe klopt met de
   werkelijkheid. De laptop heeft eigen sfeerverlichting (three.js layers),
   zodat die er altijd goed uitziet.
-- **`iss`-commando** — live rapport in de terminal.
+- **`iss`-commando** - live rapport in de terminal.
 
 Valt de API weg, dan toont de HUD statische fallback-waarden en blijft de
 globe in de laatste stand staan.
@@ -334,7 +334,7 @@ Hoe het werkt:
 **Privacy / AVG:** het volledige bezoekers-IP gaat **onverkort** mee in de
 Signal-melding (bewuste keuze). E-mailinhoud (onderwerp/bericht) wordt
 **nooit** gelogd. IP's + tijdstippen zijn persoonsgegevens, en de interface
-meldt niet dát er gelogd wordt — vermeld dit dus zelf in een
+meldt niet dát er gelogd wordt - vermeld dit dus zelf in een
 privacyverklaring. Houd er rekening mee dat je hiermee bezoekers-IP's naar
 een Signal-kanaal stuurt.
 
@@ -361,11 +361,11 @@ meegestuurd naar SolarEdge.
 
 ## Credits & licenties
 
-- **MacBook-model** — `mac-draco.glb` uit de officiële
+- **MacBook-model** - `mac-draco.glb` uit de officiële
   [pmndrs/examples](https://github.com/pmndrs/examples) (floating-laptop demo),
   CC-BY-4.0.
-- **Aarde-textures** — uit de [three.js-voorbeelden](https://threejs.org/examples/)
+- **Aarde-textures** - uit de [three.js-voorbeelden](https://threejs.org/examples/)
   (gebaseerd op NASA Blue Marble-beeldmateriaal).
-- **HDR-omgeving** — `potsdamer_platz_1k.hdr` via
+- **HDR-omgeving** - `potsdamer_platz_1k.hdr` via
   [pmndrs/drei-assets](https://github.com/pmndrs/drei-assets) (Poly Haven, CC0).
-- **ISS-telemetrie** — [wheretheiss.at](https://wheretheiss.at).
+- **ISS-telemetrie** - [wheretheiss.at](https://wheretheiss.at).

@@ -42,7 +42,7 @@ export default function Macbook({ lang, setLang, onOpenPhoto }: MacbookProps) {
           <mesh geometry={nodes['Cube008_2'].geometry}>
             {/* Het 'beeldscherm': HTML geprojecteerd op de schermmesh.
                 scale 0.5 compenseert de verdubbelde css-pixelmaten van
-                .screen-content — zo rastert de tekst op 2x resolutie. */}
+                .screen-content - zo rastert de tekst op 2x resolutie. */}
             <Html
               className="screen-content"
               rotation-x={-Math.PI / 2}
