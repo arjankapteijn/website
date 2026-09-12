@@ -13,9 +13,10 @@ interface SceneProps {
   setLang: (lang: Lang) => void
   onOpenPhoto: () => void
   iss: IssData | null
+  showMacbook: boolean
 }
 
-export default function Scene({ lang, setLang, onOpenPhoto, iss }: SceneProps) {
+export default function Scene({ lang, setLang, onOpenPhoto, iss, showMacbook }: SceneProps) {
   const camera = useThree((s) => s.camera)
   const ambientRef = useRef<THREE.AmbientLight>(null!)
 
@@ -43,9 +44,11 @@ export default function Scene({ lang, setLang, onOpenPhoto, iss }: SceneProps) {
       <Earth iss={iss} />
       <SpaceStation />
 
-      <group position={[0, 0.5, 0]}>
-        <Macbook lang={lang} setLang={setLang} onOpenPhoto={onOpenPhoto} />
-      </group>
+      {showMacbook && (
+        <group position={[0, 0.5, 0]}>
+          <Macbook lang={lang} setLang={setLang} onOpenPhoto={onOpenPhoto} />
+        </group>
+      )}
 
       {/* Lokale HDR voor realistische reflecties in het aluminium */}
       <Environment files="/textures/potsdamer_platz_512.hdr" />
