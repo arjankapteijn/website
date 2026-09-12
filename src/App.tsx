@@ -13,6 +13,9 @@ export default function App() {
   const [photoOpen, setPhotoOpen] = useState(false)
   const [solarOpen, setSolarOpen] = useState(false)
   const [lang, setLangState] = useState<Lang>(() => detectLang())
+  // ?macbook=off verbergt de 3D-laptop - handig om alleen de aarde + ISS-tracker
+  // op een digibord te tonen (schoolproject ruimtevaart)
+  const showMacbook = new URLSearchParams(window.location.search).get('macbook') !== 'off'
   const iss = useIss()
   const t = strings[lang]
 
@@ -55,7 +58,13 @@ export default function App() {
     <>
       <Canvas dpr={[1, 2]} camera={{ position: [0, 1.5, 24], fov: 38 }}>
         <Suspense fallback={null}>
-          <Scene lang={lang} setLang={setLang} iss={iss} onOpenPhoto={() => setPhotoOpen(true)} />
+          <Scene
+            lang={lang}
+            setLang={setLang}
+            iss={iss}
+            showMacbook={showMacbook}
+            onOpenPhoto={() => setPhotoOpen(true)}
+          />
         </Suspense>
       </Canvas>
       <Loader />
@@ -98,10 +107,12 @@ export default function App() {
         </a>
       </div>
 
-      <div className="hint">
-        <span className="hint-drag">{t.hintDrag} · </span>
-        {t.hintAction}
-      </div>
+      {showMacbook && (
+        <div className="hint">
+          <span className="hint-drag">{t.hintDrag} · </span>
+          {t.hintAction}
+        </div>
+      )}
 
       {photoOpen && (
         <PhotoModal

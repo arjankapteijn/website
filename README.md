@@ -89,6 +89,11 @@ npm run preview  # test de productiebuild lokaal
 volgt de site de browsertaal. Overschrijven kan met `?lang=en|nl` in de URL
 of het `lang`-commando in de terminal (opgeslagen in localStorage).
 
+### Kiosk-modus (digibord e.d.)
+
+`?macbook=off` verbergt het 3D-laptopmodel (en de bijbehorende hint-tekst),
+zodat alleen de aarde met de live ISS-tracker in beeld blijft.
+
 ## Deployen op TrueNAS (Docker + Nginx Proxy Manager)
 
 De site draait als kleine, gehardende Docker-container
