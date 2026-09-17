@@ -6,14 +6,16 @@
 // dat elders wél nodig zijn (cgroup-limieten, lxcfs), dan wijzen de
 // HOST_PROC_*-env-vars naar een alternatief pad. Bestaat /proc niet (bv.
 // macOS-dev), dan gooien de readFns - de caller vangt dat op en toont de
-// "geen live data"-fallback.
+// "geen live data"-fallback. DATA_DIR (voor de statfs-call) is dezelfde
+// env-var als de rest van de app al gebruikt (zie Dockerfile), geen
+// apart HOST_-voorvoegsel.
 
 import { readFile as defaultReadFile, statfs as defaultStatfs } from 'node:fs/promises'
 
 const PROC_STAT = process.env.HOST_PROC_STAT ?? '/proc/stat'
 const PROC_MEMINFO = process.env.HOST_PROC_MEMINFO ?? '/proc/meminfo'
 const PROC_UPTIME = process.env.HOST_PROC_UPTIME ?? '/proc/uptime'
-const DATA_DIR = process.env.HOST_DATA_DIR ?? '/data'
+const DATA_DIR = process.env.DATA_DIR ?? '/data'
 
 /**
  * Parseert de eerste regel van /proc/stat ("cpu  user nice system idle …")

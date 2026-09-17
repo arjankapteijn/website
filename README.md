@@ -95,131 +95,36 @@ of het `lang`-commando in de terminal (opgeslagen in localStorage).
 `?macbook=off` verbergt het 3D-laptopmodel (en de bijbehorende hint-tekst),
 zodat alleen de aarde met de live ISS-tracker in beeld blijft.
 
-## Deployen op TrueNAS (Docker + Nginx Proxy Manager)
+## Deployen (Docker + Arcane + Nginx Proxy Manager)
 
 De site draait als kleine, gehardende Docker-container
 ([Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml)):
-multi-stage build (geen node_modules in het eindimage), draait als
-niet-root (uid 10001), `read_only` rootfs, alle capabilities gedropt,
-`no-new-privileges`, geheugen- en pids-limiet, en een healthcheck op
-`/healthz`. De rootfs is volledig read-only - er wordt niets weggeschreven
-(het logboek gaat via Signal).
+multi-stage build (geen node_modules in het eindimage), niet-root (de
+ingebouwde `node`-user, uid 1000), `read_only` rootfs, alle capabilities
+gedropt, `no-new-privileges`,
+geheugen- en pids-limiet, en een healthcheck op `/healthz`.
 
-Het image wordt door **GitHub Actions** gebouwd en als privé-image naar
-**ghcr.io** gepusht (`ghcr.io/arjankapteijn/website`, zie
-[docker-publish.yml](.github/workflows/docker-publish.yml)). Op TrueNAS
-hoef je dus niet meer te klonen of te bouwen - alleen te pullen.
+**GitHub Actions** bouwt het image en pusht het als privé-image naar
+**ghcr.io** (`ghcr.io/arjankapteijn/website`, zie
+[docker-publish.yml](.github/workflows/docker-publish.yml)) bij elke push
+naar `main` (zie "Versies / releases").
 
-### Eenmalig: inloggen bij ghcr.io
+Zelf draait de site op TrueNAS SCALE als gewone Docker-container, beheerd
+via [Arcane](https://github.com/getarcaneapp/arcane) - géén TrueNAS
+"custom app". Compose en env-vars staan in Arcane's eigen projectmap op de
+host; [docker-compose.yml](docker-compose.yml) hierboven is het portable
+voorbeeld voor als je 'm zelf ergens anders (niet via Arcane) wil draaien.
+Omdat het image privé is, moet de Docker-host één keer inloggen bij de
+registry (PAT met scope `read:packages`):
+`echo <TOKEN> | docker login ghcr.io -u arjankapteijn --password-stdin`.
 
-Omdat het image privé is, moet de TrueNAS-host één keer inloggen bij de
-registry. Maak op GitHub een **Personal Access Token (classic)** met enkel
-de scope `read:packages` en log in via SSH:
+### Updaten
 
-```bash
-echo <TOKEN> | docker login ghcr.io -u arjankapteijn --password-stdin
-```
-
-De credentials komen in `~/.docker/config.json` te staan en blijven geldig
-voor toekomstige pulls.
-
-### Eerste keer uitrollen
-
-```bash
-# op de TrueNAS-host (SSH), bijv. in /mnt/<pool>/apps:
-git clone https://github.com/arjankapteijn/website.git arjankapteijn
-cd arjankapteijn
-cp .env.example .env && nano .env   # SMTP2GO-wachtwoord invullen
-docker compose pull                 # haalt het image van ghcr.io
-docker compose up -d
-curl http://localhost:8090/healthz  # → ok
-```
-
-NB: een container die je zo via SSH start draait prima (en herstart
-automatisch dankzij `restart: unless-stopped`), maar verschijnt **niet**
-op de Apps-pagina van TrueNAS - die toont alleen apps die via de eigen
-middleware zijn geïnstalleerd. De "Containers"-toggle (Incus-virtualisatie
-voor VM's/LXC) staat hier ook los van en kan gewoon uit blijven.
-
-### Optioneel: zichtbaar maken in de TrueNAS Apps-UI
-
-Wil je een start/stop-knop, status én een **Update-knop** in de
-webinterface, registreer de container dan als custom app via
-**Apps → Discover Apps → ⋮ → Install via YAML**, naam `arjankapteijn`,
-met deze inhoud (absolute paden, kant-en-klaar image van ghcr.io):
-
-```yaml
-services:
-  website:
-    image: ghcr.io/arjankapteijn/website:latest
-    container_name: arjankapteijn-website
-    restart: unless-stopped
-    ports:
-      - '8090:8080'
-    env_file: /mnt/<pool>/apps/arjankapteijn/.env
-    read_only: true
-    cap_drop: [ALL]
-    security_opt:
-      - no-new-privileges:true
-    tmpfs:
-      - /tmp:size=8m
-    mem_limit: 256m
-    pids_limit: 64
-    pull_policy: always
-```
-
-(De host-login bij ghcr.io uit de vorige stap geldt ook hier.) Zodra
-GitHub Actions een nieuw image onder de `latest`-tag pusht, toont TrueNAS
-bij de app een **Update**-knop - één klik en de nieuwe versie draait.
-
-### Custom-icoon in de Apps-UI
-
-Custom apps hebben geen icoon-veld in de YAML; het icoon komt uit de
-app-metadata in `/mnt/.ix-apps/metadata.yaml`. Onder het `arjankapteijn`-blok
-staat, binnen `"metadata":`, een `icon`-regel:
-
-```yaml
-    "icon": "https://arjankapteijn.nl/favicon.svg"
-```
-
-> **Let op:** TrueNAS kan `metadata.yaml` bij een app-**update** overschrijven,
-> waardoor het icoon verdwijnt. Zet 'm dan met onderstaand blokje opnieuw.
-> Bewerk dit systeembestand nooit blind: **valideer de YAML vóór je 'm
-> toepast**, anders toont de Apps-pagina "No Applications Installed".
-
-```bash
-# 1) backup
-cp /mnt/.ix-apps/metadata.yaml /mnt/.ix-apps/metadata.yaml.bak
-
-# 2) voeg de icon-regel toe aan het arjankapteijn-blok (naar /tmp)
-awk '
-  /^"arjankapteijn":/ {inapp=1}
-  /^"[a-z]/ && !/^"arjankapteijn":/ {inapp=0}
-  {print}
-  inapp && /^  "metadata":/ && !done {
-    print "    \"icon\": \"https://arjankapteijn.nl/favicon.svg\""
-    done=1
-  }
-' /mnt/.ix-apps/metadata.yaml.bak > /tmp/meta.new
-
-# 3) valideer en pas alleen bij geldige YAML toe
-python3 -c "import yaml; yaml.safe_load(open('/tmp/meta.new')); print('OK')" \
-  && cp /tmp/meta.new /mnt/.ix-apps/metadata.yaml \
-  && echo "toegepast" \
-  || echo "ONGELDIG - niets gewijzigd, backup staat nog"
-```
-
-Ververs daarna de Apps-pagina (F5); zo nodig de app stop/start zodat de
-middleware de metadata opnieuw inleest. Controleer met:
-
-```bash
-awk '/^"arjankapteijn":/{f=1} f&&/^"[a-z]/&&!/^"arjankapteijn":/{exit} f{print}' \
-  /mnt/.ix-apps/metadata.yaml
-```
-
-Er hoort **precies één** `"icon":`-regel in het blok te staan. Raakt het bestand
-tóch stuk (Apps-pagina leeg), zet dan de backup terug:
-`cp /mnt/.ix-apps/metadata.yaml.bak /mnt/.ix-apps/metadata.yaml`.
+Push naar `main` → nieuw `:latest`-image op ghcr.io. In Arcane pikt de
+**Auto Update**-automation dat zelf op (Image Update Watcher pollt elk uur,
+Auto Update past dagelijks toe) - of klik zelf op **Update** bij de
+container. Lokaal de productieversie testen: `npm run build && npm start`
+(→ http://localhost:8080).
 
 ### Achter Nginx Proxy Manager (Let's Encrypt)
 
@@ -237,21 +142,6 @@ tóch stuk (Apps-pagina leeg), zet dan de backup terug:
 
 NPM stuurt `X-Forwarded-For` standaard mee, zodat de prompt en de
 Signal-melding het echte bezoekers-IP zien.
-
-### Updaten
-
-Push je naar `main`, dan bouwt GitHub Actions automatisch een nieuw image.
-Uitrollen kan dan op twee manieren - geen `git pull`, geen lokale build:
-
-- **TrueNAS Apps-UI:** klik op de **Update**-knop bij de app.
-- **Via SSH:**
-  ```bash
-  cd /mnt/<pool>/apps/arjankapteijn
-  docker compose pull && docker compose up -d
-  ```
-
-Lokaal de productieversie testen: `npm run build && npm start`
-(→ http://localhost:8080).
 
 ### Versies / releases
 
@@ -281,9 +171,9 @@ Een handmatige `v*`-tag-push werkt ook en bouwt altijd.
 | Push naar `main` | `:latest`, `:x.y.z`, `:x.y`, `:sha-<short>` |
 | Handmatige `v1.2.3`-tag | `:1.2.3`, `:1.2` |
 
-De TrueNAS-app staat op `:latest` met `pull_policy: always`, dus de
-Update-knop pakt vanzelf de nieuwste versie. Pinnen op een vaste tag
-(bijv. `:1.1.0`) is mogelijk voor deterministisch rollback.
+De site draait bewust op `:latest`; Arcane's Update-knop/Auto Update pakt
+vanzelf de nieuwste versie. Pinnen op een vaste tag (bijv. `:1.1.0`) is
+mogelijk voor deterministisch rollback.
 
 ## Live ISS-data
 
