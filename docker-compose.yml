@@ -21,12 +21,12 @@ services:
       # vrije schijfruimte) - er wordt zelf niets naar weggeschreven, het
       # scheepslogboek gaat via Signal, niet naar bestand.
       - ./data:/data
-    # ── hardening ── (image draait al als niet-root, zie Dockerfile `USER app`)
+    # ── hardening ── (image draait al als niet-root, zie Dockerfile `USER node`;
+    # geen tmpfs voor /tmp nodig - niets in de app of Node zelf schrijft daar
+    # iets naar, getest zonder tmpfs met read_only: true en geen enkele fout)
     read_only: true
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
-    tmpfs:
-      - /tmp:size=8m
     mem_limit: 256m
     pids_limit: 64
