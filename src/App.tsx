@@ -4,6 +4,7 @@ import { Loader } from '@react-three/drei'
 import Scene from './components/Scene'
 import PhotoModal from './components/PhotoModal'
 import SolarModal from './components/SolarModal'
+import HostModal from './components/HostModal'
 import { profile } from './config'
 import { detectLang, saveLang, strings, type Lang } from './i18n'
 import { ISS_INTERVAL_MS, useIss } from './hooks/useIss'
@@ -12,6 +13,7 @@ import { renderMarkdownLinks } from './lib/markdown'
 export default function App() {
   const [photoOpen, setPhotoOpen] = useState(false)
   const [solarOpen, setSolarOpen] = useState(false)
+  const [hostOpen, setHostOpen] = useState(false)
   const [lang, setLangState] = useState<Lang>(() => detectLang())
   // ?macbook=off verbergt de 3D-laptop - handig om alleen de aarde + ISS-tracker
   // op een digibord te tonen (schoolproject ruimtevaart)
@@ -45,6 +47,13 @@ export default function App() {
     const open = () => setSolarOpen(true)
     window.addEventListener('ak:open-solar', open)
     return () => window.removeEventListener('ak:open-solar', open)
+  }, [])
+
+  // het Activity Monitor-icoontje in de menubalk opent de hosting-popup
+  useEffect(() => {
+    const open = () => setHostOpen(true)
+    window.addEventListener('ak:open-host', open)
+    return () => window.removeEventListener('ak:open-host', open)
   }, [])
 
   const fmt = (n: number, digits = 0) =>
@@ -127,6 +136,8 @@ export default function App() {
       )}
 
       {solarOpen && <SolarModal lang={lang} onClose={() => setSolarOpen(false)} />}
+
+      {hostOpen && <HostModal lang={lang} onClose={() => setHostOpen(false)} />}
 
       {/* Voor zoekmachines en screenreaders - tevens het main-landmark */}
       <main className="visually-hidden">

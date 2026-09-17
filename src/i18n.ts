@@ -44,9 +44,9 @@ const nl = {
   solar: {
     title: 'Zonnepanelen',
     subtitle: 'station AK-01 · energievoorziening',
-    batteryTitle: 'Accu - live gevoed door echte zonnepanelen (klik voor meer)',
+    iconTitle: 'Accu - live gevoed door echte zonnepanelen (klik voor meer)',
     intro:
-      'De accu van deze MacBook loopt op échte zonne-energie: het percentage in de menubalk is het actuele vermogen van mijn zonnepanelen thuis.',
+      'De accu van deze MacBook loopt op échte zonne-energie: zodra er live data binnenkomt, toont het percentage in de menubalk het actuele vermogen van mijn zonnepanelen thuis.',
     current: 'huidig vermogen',
     ofPeak: 'van',
     today: 'opbrengst vandaag',
@@ -57,6 +57,23 @@ const nl = {
     noData: 'Live-data is even niet beschikbaar - de zon schijnt vast ergens anders.',
     source: 'bron: SolarEdge-monitoring',
     updated: 'meting',
+  },
+
+  hosting: {
+    title: 'Hosting',
+    subtitle: 'zelfgehost · homelab',
+    iconTitle: 'Live systeembelasting van de server die deze site host (klik voor meer)',
+    intro: 'Deze site draait niet in de cloud, maar gewoon thuis: een Docker-container op mijn eigen homelab.',
+    uptime: 'uptime',
+    uptimeUnit: { d: 'd', h: 'u' },
+    sinceLaunch: 'sinds de laatste lancering',
+    machine: 'machine',
+    specCpu: 'processor',
+    specRam: 'geheugen',
+    specStorage: 'opslag',
+    noData: 'Live-cijfers zijn nu niet beschikbaar - de server draait gewoon door.',
+    source: 'bron: /proc op de host',
+    updated: 'gemeten',
   },
 
   hud: {
@@ -79,13 +96,18 @@ const nl = {
   photoAlt: 'Foto van Arjan openen',
 
   term: {
+    // checks (└ motd wordt hierna geplakt, zie bootWelcome) en het vervolg
+    // van de boot-animatie - los van elkaar zodat Terminal.tsx de live
+    // uptime/load-motd tussen de twee in kan schuiven
     boot: [
       { text: 'AK-OS 1.0 - verbinding met station AK-01…', cls: 'dim' },
       { text: '[ ok ] zonnepanelen uitgelijnd', cls: 'ok' },
       { text: '[ ok ] zwaartekracht uitgeschakeld', cls: 'ok' },
       { text: '[ ok ] koffie aan boord', cls: 'ok' },
+    ] as TermLine[],
+    bootWelcome: [
       { text: '' },
-      { text: 'Welkom aan boord. Dit is de persoonlijke site van Arjan Kapteijn.' },
+      { text: 'Welkom aan boord van mijn ruimtestation.' },
       { text: "Typ 'help' voor een lijst met commando's.", cls: 'accent' },
       { text: '' },
     ] as TermLine[],
@@ -184,6 +206,10 @@ const nl = {
         { text: "Typ 'help' voor de mogelijkheden.", cls: 'dim' },
         { text: '' },
       ] as TermLine[],
+    // MOTD-regel die tussen de laatste boot-check en het welkomstbericht
+    // wordt geschoven zodra /api/host op tijd binnen is (zelfde soort
+    // systeeminfo als je bij een ssh-login zou zien).
+    motd: (uptime: string): TermLine[] => [{ text: `[ ok ] ${uptime}`, cls: 'ok' }],
     skillsHeader: 'Skills:',
     neofetchLines: [
       'Host: MacBook Pro M1 Max',
@@ -227,9 +253,9 @@ const en: typeof nl = {
   solar: {
     title: 'Solar panels',
     subtitle: 'station AK-01 · power supply',
-    batteryTitle: 'Battery - live powered by real solar panels (click for more)',
+    iconTitle: 'Battery - live powered by real solar panels (click for more)',
     intro:
-      'This MacBook runs on real solar power: the percentage in the menu bar is the current output of my solar panels at home.',
+      'This MacBook runs on real solar power: once live data comes in, the percentage in the menu bar shows the current output of my solar panels at home.',
     current: 'current output',
     ofPeak: 'of',
     today: "today's yield",
@@ -239,6 +265,23 @@ const en: typeof nl = {
     panels: 'panels',
     noData: 'Live data is unavailable right now - the sun must be shining elsewhere.',
     source: 'source: SolarEdge monitoring',
+    updated: 'measured',
+  },
+
+  hosting: {
+    title: 'Hosting',
+    subtitle: 'self-hosted · homelab',
+    iconTitle: 'Live system load of the server hosting this site (click for more)',
+    intro: "This site doesn't run in the cloud - it's a Docker container on my own homelab, at home.",
+    uptime: 'uptime',
+    uptimeUnit: { d: 'd', h: 'h' },
+    sinceLaunch: 'since the last launch',
+    machine: 'machine',
+    specCpu: 'processor',
+    specRam: 'memory',
+    specStorage: 'storage',
+    noData: 'Live figures are unavailable right now - the server just keeps running.',
+    source: 'source: /proc on the host',
     updated: 'measured',
   },
 
@@ -266,8 +309,10 @@ const en: typeof nl = {
       { text: '[ ok ] solar panels aligned', cls: 'ok' },
       { text: '[ ok ] gravity disabled', cls: 'ok' },
       { text: '[ ok ] coffee on board', cls: 'ok' },
+    ],
+    bootWelcome: [
       { text: '' },
-      { text: 'Welcome aboard. This is the personal site of Arjan Kapteijn.' },
+      { text: 'Welcome aboard my space station.' },
       { text: "Type 'help' for a list of commands.", cls: 'accent' },
       { text: '' },
     ],
@@ -365,6 +410,7 @@ const en: typeof nl = {
       { text: "Type 'help' to see what's possible.", cls: 'dim' },
       { text: '' },
     ],
+    motd: (uptime: string): TermLine[] => [{ text: `[ ok ] ${uptime}`, cls: 'ok' }],
     skillsHeader: 'Skills:',
     neofetchLines: [
       'Host: MacBook Pro M1 Max',

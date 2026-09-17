@@ -1,27 +1,24 @@
 import { useEffect } from 'react'
-import { solar } from '../config'
+import { hosting } from '../config'
 import { strings, type Lang } from '../i18n'
-import { solarPercent, useSolar } from '../hooks/useSolar'
+import { useHostStats } from '../hooks/useHostStats'
+import { formatUptime } from '../lib/format'
 
-interface SolarModalProps {
+interface HostModalProps {
   lang: Lang
   onClose: () => void
 }
 
-export default function SolarModal({ lang, onClose }: SolarModalProps) {
-  const t = strings[lang].solar
+export default function HostModal({ lang, onClose }: HostModalProps) {
+  const t = strings[lang].hosting
   const locale = strings[lang].locale
-  const data = useSolar()
+  const data = useHostStats()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
-
-  const kwh = (wh: number, digits = 1) =>
-    `${(wh / 1000).toLocaleString(locale, { maximumFractionDigits: digits })} kWh`
-  const peakKwp = (solar.peakWatt / 1000).toLocaleString(locale, { maximumFractionDigits: 1 })
 
   return (
     <div className="photo-modal-backdrop" onClick={onClose}>
@@ -31,7 +28,7 @@ export default function SolarModal({ lang, onClose }: SolarModalProps) {
         </button>
         <div className="photo-modal__header">
           <div className="photo-modal__icon" aria-hidden="true">
-            ☀️
+            🏠
           </div>
           <div>
             <h2>{t.title}</h2>
@@ -40,24 +37,27 @@ export default function SolarModal({ lang, onClose }: SolarModalProps) {
         </div>
         <p className="photo-modal__bio">{t.intro}</p>
         <dl className="photo-modal__stats">
-          <dt>{t.inverter}</dt>
-          <dd>{solar.inverter}</dd>
-          <dt>{t.panels}</dt>
+          <dt>{t.machine}</dt>
+          <dd>{hosting.machine}</dd>
+          <dt>{t.specCpu}</dt>
           <dd>
-            {solar.panels} × {solar.panelType} ({solar.panelWatt} Wp)
+            {hosting.cpu}
+            {data && ` (${Math.round(data.cpu)}%)`}
+          </dd>
+          <dt>{t.specRam}</dt>
+          <dd>
+            {hosting.ram}
+            {data && ` (${data.memPercent}%)`}
+          </dd>
+          <dt>{t.specStorage}</dt>
+          <dd>
+            {hosting.storage}
+            {data && ` (${Math.round((1 - data.diskAvailGb / hosting.storageTotalGb) * 100)}%)`}
           </dd>
           {data && (
             <>
-              <dt>{t.current}</dt>
-              <dd>
-                {Math.round(data.power).toLocaleString(locale)} W · {solarPercent(data)}% {t.ofPeak} {peakKwp} kWp
-              </dd>
-              <dt>{t.today}</dt>
-              <dd>{kwh(data.today)}</dd>
-              <dt>{t.month}</dt>
-              <dd>{kwh(data.month)}</dd>
-              <dt>{t.lifetime}</dt>
-              <dd>{kwh(data.lifetime, 0)}</dd>
+              <dt>{t.uptime}</dt>
+              <dd>{formatUptime(data.uptimeSec, t.uptimeUnit, t.sinceLaunch)}</dd>
             </>
           )}
         </dl>
@@ -67,7 +67,7 @@ export default function SolarModal({ lang, onClose }: SolarModalProps) {
           {data?.updatedAt && (
             <>
               <br />
-              {t.updated}: {data.updatedAt}
+              {t.updated}: {new Date(data.updatedAt).toLocaleTimeString(locale)}
             </>
           )}
         </p>

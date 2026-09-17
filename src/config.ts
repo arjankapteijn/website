@@ -39,3 +39,23 @@ export const solar = {
   panelWatt: 300, // Wp per paneel
   peakWatt: 2700, // 9 × 300 Wp = 2,7 kWp
 }
+
+// ─── Hosting / homelab ──────────────────────────────────────────────────
+// Het icoontje in de menubalk toont live cpu-gebruik van de machine die
+// deze site host; klikken opent een modal met specs + cpu/geheugen/schijf,
+// rechtstreeks via /proc (zie server/host.js) - geen cloud-API, geen
+// credentials.
+export const hosting = {
+  endpoint: '/api/host',
+  pollMs: 15_000,
+  // Specs opgevraagd via SSH op de homelab-machine zelf (2026-09-17,
+  // ram bijgewerkt na de uitbreiding diezelfde middag)
+  machine: 'Lenovo ThinkCentre M710q',
+  cpu: 'Intel i5-7500T @ 2,70GHz',
+  ram: '16 GB DDR4',
+  storage: '1 TB NVME',
+  // Werkelijke bruikbare pool-capaciteit (used+available via `zfs get`) - ZFS
+  // geeft via de gewone filesystem-call geen totale pool-grootte terug, dus
+  // dit staat hier als vaste waarde, net als de rest van de specs hierboven
+  storageTotalGb: 915,
+}

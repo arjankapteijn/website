@@ -249,8 +249,8 @@ canvas {
   background: rgba(70, 120, 255, 0.28);
 }
 
-/* ── Zonnepanelen-popup ─────────────────────────────────────────────── */
-.solar-modal__icon {
+/* ── Stats-popups (zonnepanelen, hosting) ──────────────────────────── */
+.photo-modal__icon {
   width: 96px;
   height: 96px;
   flex: none;
@@ -261,7 +261,7 @@ canvas {
   background: #1a2440;
 }
 
-.solar-stats {
+.photo-modal__stats {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 7px 18px;
@@ -269,7 +269,7 @@ canvas {
   font-size: 12.5px;
 }
 
-.solar-stats dt {
+.photo-modal__stats dt {
   color: rgba(160, 190, 255, 0.75);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -277,12 +277,12 @@ canvas {
   align-self: baseline;
 }
 
-.solar-stats dd {
+.photo-modal__stats dd {
   margin: 0;
   color: rgba(214, 224, 245, 0.92);
 }
 
-.solar-source {
+.photo-modal__source {
   margin: 0;
   font-size: 11px;
   color: rgba(160, 190, 255, 0.5);

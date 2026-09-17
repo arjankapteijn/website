@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { profile } from '../config'
 import { strings, type Lang, type TermLine } from '../i18n'
 import { fetchIss } from '../hooks/useIss'
+import { useHostStats } from '../hooks/useHostStats'
 import { logCommand, shortIp, useIp } from '../lib/log'
 import { mailtoUrl, sendEmail } from '../lib/mail'
 import { renderMarkdownLinks } from '../lib/markdown'
+import { formatUptime } from '../lib/format'
 
 type EmailStep = 'none' | 'subject' | 'body' | 'reply' | 'confirm'
 
@@ -36,6 +38,7 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   const t = strings[lang].term
   const ip = useIp()
   const user = ip ? shortIp(ip) : lang === 'nl' ? 'bezoeker' : 'visitor'
+  const host = useHostStats()
 
   // bootregels staan los van de rest: de opstartanimatie zet steeds de
   // eerste n regels (idempotent) zodat een dubbele effect-run - StrictMode
@@ -54,14 +57,35 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
   // de boot-taal is de taal op het moment van mounten
   const initialLang = useRef(lang)
 
-  // opstart-animatie (in de taal waarmee de pagina opent)
+  // laatste host-stats bijhouden in een ref, zodat de boot-interval (die maar
+  // één keer opstart, deps []) toch de meest recente waarde kan lezen zonder
+  // zelf een afhankelijkheid te worden
+  const hostRef = useRef(host)
   useEffect(() => {
-    const boot = strings[initialLang.current].term.boot
+    hostRef.current = host
+  }, [host])
+
+  // opstart-animatie (in de taal waarmee de pagina opent). De live
+  // uptime-motd (zoals je bij een ssh-login zou zien) schuift precies ná
+  // de laatste [ ok ]-check en vóór het welkomstbericht - maar alleen als
+  // /api/host op dát moment al cijfers heeft; anders (geen /proc-mount, of
+  // te traag) slaan we 'm gewoon over. Zo blokkeert de boot nooit op data
+  // die misschien nooit komt.
+  useEffect(() => {
+    const bootTerm = strings[initialLang.current].term
+    const bootHosting = strings[initialLang.current].hosting
+    const checks = bootTerm.boot
+    let motdLines: TermLine[] = []
     let i = 0
     const id = setInterval(() => {
       i += 1
-      setBootLines(boot.slice(0, i))
-      if (i >= boot.length) {
+      if (i === checks.length + 1 && hostRef.current) {
+        const uptime = formatUptime(hostRef.current.uptimeSec, bootHosting.uptimeUnit, bootHosting.sinceLaunch)
+        motdLines = bootTerm.motd(uptime)
+      }
+      const full = [...checks, ...motdLines, ...bootTerm.bootWelcome]
+      setBootLines(full.slice(0, i))
+      if (i >= full.length) {
         clearInterval(id)
         setBooted(true)
       }

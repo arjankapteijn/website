@@ -4,6 +4,7 @@ import { profile } from '../config'
 import { strings, type Lang } from '../i18n'
 import { shortIp, useIp } from '../lib/log'
 import { solarPercent, useSolar } from '../hooks/useSolar'
+import { useHostStats } from '../hooks/useHostStats'
 import './screen.css'
 
 function MenuClock({ locale }: { locale: string }) {
@@ -31,6 +32,7 @@ export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
   const t = strings[lang]
   const ip = useIp()
   const solar = useSolar()
+  const host = useHostStats()
   return (
     <div className="screen-desktop">
       {/* macOS-menubalk */}
@@ -43,19 +45,24 @@ export default function Screen({ lang, setLang, onOpenPhoto }: ScreenProps) {
           ))}
         </div>
         <div className="screen-menubar__right">
-          <span>📶</span>
-          {solar ? (
-            // het accupercentage = live vermogen van de echte zonnepanelen
-            <button
-              className="menubar-battery"
-              title={t.solar.batteryTitle}
-              onClick={() => window.dispatchEvent(new Event('ak:open-solar'))}
-            >
-              {solarPercent(solar) <= 15 ? '🪫' : '🔋'} {solarPercent(solar)}%
-            </button>
-          ) : (
-            <span>🔋 84%</span>
-          )}
+          {/* opent altijd de zonnepanelen-modal - ook zonder live vermogen
+              tonen we alvast de statische specs (omvormer, panelen) */}
+          <button
+            className="menubar-icon-btn"
+            title={t.solar.iconTitle}
+            onClick={() => window.dispatchEvent(new Event('ak:open-solar'))}
+          >
+            {`${solar && solarPercent(solar) <= 15 ? '🪫' : '🔋'}${solar ? ` ${solarPercent(solar)}%` : ''}`}
+          </button>
+          {/* opent altijd de hosting-modal - ook zonder live cpu-cijfer
+              tonen we alvast de statische specs van de homelab-machine */}
+          <button
+            className="menubar-icon-btn"
+            title={t.hosting.iconTitle}
+            onClick={() => window.dispatchEvent(new Event('ak:open-host'))}
+          >
+            {`📊${host ? ` ${Math.round(host.cpu)}%` : ''}`}
+          </button>
           <MenuClock locale={t.locale} />
         </div>
       </div>
