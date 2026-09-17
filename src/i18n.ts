@@ -72,7 +72,7 @@ const nl = {
     specRam: 'geheugen',
     specStorage: 'opslag',
     noData: 'Live-cijfers zijn nu niet beschikbaar - de server draait gewoon door.',
-    source: 'bron: /proc op de host',
+    source: 'bron: /proc + statfs op de host',
     updated: 'gemeten',
   },
 
@@ -281,7 +281,7 @@ const en: typeof nl = {
     specRam: 'memory',
     specStorage: 'storage',
     noData: 'Live figures are unavailable right now - the server just keeps running.',
-    source: 'source: /proc on the host',
+    source: 'source: /proc + statfs on the host',
     updated: 'measured',
   },
 
