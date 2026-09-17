@@ -70,7 +70,7 @@ describe('getHostStats', () => {
       return call++ === 0 ? STAT_A : STAT_B
     }
     const statfsImpl = async () => STATFS
-    const stats = await getHostStats({ readFileImpl, statfsImpl })
+    const stats = await getHostStats({ readFileImpl, statfsImpl, sampleMs: 0 })
     expect(stats).toMatchObject({
       cpu: 37,
       memPercent: 75,

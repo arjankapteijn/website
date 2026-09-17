@@ -72,10 +72,14 @@ export async function readDiskAvailGb({ statfsImpl = defaultStatfs } = {}) {
 }
 
 /**
- * Cpu-gebruik in % over een kort interval (zelfde aanpak als `top -d 0.2`):
- * /proc/stat is cumulatief sinds boot, dus twee metingen vlak na elkaar.
+ * Cpu-gebruik in % over een interval (zelfde aanpak als `mpstat 1 1`):
+ * /proc/stat is cumulatief sinds boot, dus twee metingen na elkaar. 1
+ * seconde (niet 200ms) is bewust: op een host met een paar containers
+ * die af en toe pieken (Immich, Vaultwarden, ...) gaf een kort venster
+ * een wild schommelend, onbetrouwbaar getal (1%, 18%, zelfs 48% in
+ * losse metingen); 1s geeft dezelfde stabiele ~3-5% als `mpstat`.
  */
-export async function readCpuPercent({ readFileImpl = defaultReadFile, sampleMs = 200 } = {}) {
+export async function readCpuPercent({ readFileImpl = defaultReadFile, sampleMs = 1000 } = {}) {
   const a = parseCpuLine(await readFileImpl(PROC_STAT, 'utf8'))
   await new Promise((resolve) => setTimeout(resolve, sampleMs))
   const b = parseCpuLine(await readFileImpl(PROC_STAT, 'utf8'))
@@ -85,9 +89,9 @@ export async function readCpuPercent({ readFileImpl = defaultReadFile, sampleMs 
 }
 
 /** Combineert cpu + geheugen + schijf + uptime tot de payload die `/api/host` teruggeeft. */
-export async function getHostStats({ readFileImpl = defaultReadFile, statfsImpl = defaultStatfs } = {}) {
+export async function getHostStats({ readFileImpl = defaultReadFile, statfsImpl = defaultStatfs, sampleMs } = {}) {
   const [cpu, mem, uptimeSec, diskAvailGb] = await Promise.all([
-    readCpuPercent({ readFileImpl }),
+    readCpuPercent({ readFileImpl, sampleMs }),
     readFileImpl(PROC_MEMINFO, 'utf8').then(parseMemInfo),
     readFileImpl(PROC_UPTIME, 'utf8').then(parseUptime),
     readDiskAvailGb({ statfsImpl }),
