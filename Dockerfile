@@ -1,6 +1,8 @@
 # ── Build ───────────────────────────────────────────────────────────────
 FROM node:24-alpine AS build
 WORKDIR /app
+ARG APP_VERSION=dev
+ENV VITE_APP_VERSION=$APP_VERSION
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

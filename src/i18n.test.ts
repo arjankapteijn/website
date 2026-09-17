@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { detectLang, saveLang, strings } from './i18n'
+import { appVersion } from './version'
 
 // jsdom kan niet echt navigeren en location.hostname is niet herdefinieerbaar,
 // dus vervangen we window.location in z'n geheel door een plat object.
@@ -81,6 +82,13 @@ describe('strings', () => {
 
   it('houdt de term-sleutels van nl en en gelijk', () => {
     expect(Object.keys(strings.en.term).sort()).toEqual(Object.keys(strings.nl.term).sort())
+  })
+
+  it('toont de buildversie in de bootmelding en neofetch voor beide talen', () => {
+    for (const lang of ['nl', 'en'] as const) {
+      expect(strings[lang].term.boot[0].text).toContain('AK-OS ' + appVersion)
+      expect(strings[lang].term.neofetchLines).toContain('OS: AK-OS ' + appVersion)
+    }
   })
 })
 

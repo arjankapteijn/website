@@ -3,6 +3,8 @@
 // Bezoekers kunnen wisselen met het `lang`-commando in de terminal
 // (wordt onthouden in localStorage) of met ?lang=en / ?lang=nl.
 
+import { appVersion } from './version'
+
 export type Lang = 'nl' | 'en'
 
 export type TermLine = { text: string; cls?: string }
@@ -100,7 +102,7 @@ const nl = {
     // van de boot-animatie - los van elkaar zodat Terminal.tsx de live
     // uptime/load-motd tussen de twee in kan schuiven
     boot: [
-      { text: 'AK-OS 1.0 - verbinding met station AK-01…', cls: 'dim' },
+      { text: 'AK-OS ' + appVersion + ' - verbinding met station AK-01…', cls: 'dim' },
       { text: '[ ok ] zonnepanelen uitgelijnd', cls: 'ok' },
       { text: '[ ok ] zwaartekracht uitgeschakeld', cls: 'ok' },
       { text: '[ ok ] koffie aan boord', cls: 'ok' },
@@ -215,9 +217,9 @@ const nl = {
       'Host: MacBook Pro M1 Max',
       'Chip: M1 Max · 10-core',
       'RAM: 64 GB unified',
-      'OS: AK-OS 1.0',
+      'OS: AK-OS ' + appVersion,
       'Shell: zsh 5.9',
-      "Brew: 4.2.0 ☕",
+      'Brew: 4.2.0 ☕',
       'Hoogte: ±420 km',
       'Snelheid: ±27.500 km/u',
       'Uptime: sinds lancering',
@@ -305,7 +307,7 @@ const en: typeof nl = {
 
   term: {
     boot: [
-      { text: 'AK-OS 1.0 - connecting to station AK-01…', cls: 'dim' },
+      { text: 'AK-OS ' + appVersion + ' - connecting to station AK-01…', cls: 'dim' },
       { text: '[ ok ] solar panels aligned', cls: 'ok' },
       { text: '[ ok ] gravity disabled', cls: 'ok' },
       { text: '[ ok ] coffee on board', cls: 'ok' },
@@ -416,9 +418,9 @@ const en: typeof nl = {
       'Host: MacBook Pro M1 Max',
       'Chip: M1 Max · 10-core',
       'RAM: 64 GB unified',
-      'OS: AK-OS 1.0',
+      'OS: AK-OS ' + appVersion,
       'Shell: zsh 5.9',
-      "Brew: 4.2.0 ☕",
+      'Brew: 4.2.0 ☕',
       'Altitude: ±420 km',
       'Velocity: ±27,500 km/h',
       'Uptime: since launch',

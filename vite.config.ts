@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -6,6 +7,18 @@ import react from '@vitejs/plugin-react'
 import { sendSignal, formatLogMessage } from './server/signal.js'
 // @ts-expect-error - geen .d.ts voor server/host.js
 import { getHostStats } from './server/host.js'
+
+function getGitVersion(): string {
+  try {
+    return execFileSync('git', ['describe', '--tags', '--always', '--dirty'], {
+      encoding: 'utf8',
+    })
+      .trim()
+      .replace(/^v/, '')
+  } catch {
+    return 'dev'
+  }
+}
 
 // Dev-versie van het scheepslogboek: pusht getypte commando's als Signal-
 // bericht, net als server/server.js in productie. Config uit .env
@@ -149,4 +162,7 @@ function hostProxy(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), terminalLog(), solarProxy(), hostProxy()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.VITE_APP_VERSION || getGitVersion()),
+  },
 })
