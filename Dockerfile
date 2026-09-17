@@ -12,16 +12,15 @@ RUN npm run build
 # scheepslogboek gaat via Signal, er wordt niets weggeschreven). Het
 # /data-volume dient alleen nog voor de statfs-call van de serverstatus-
 # widget (vrije schijfruimte) - blijft zelf leeg.
+# Gebruikt de ingebouwde `node`-user (uid 1000) van het base-image i.p.v.
+# zelf een user aan te maken; `wget` zit al standaard in Alpine (BusyBox).
 FROM node:24-alpine
-RUN apk add --no-cache wget \
-  && addgroup -g 10001 app \
-  && adduser -D -u 10001 -G app app \
-  && mkdir -p /data && chown app:app /data
+RUN mkdir -p /data && chown node:node /data
 WORKDIR /app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --chown=app:app server ./server
+COPY --from=build --chown=node:node /app/dist ./dist
+COPY --chown=node:node server ./server
 
-USER app
+USER node
 ENV NODE_ENV=production \
     PORT=8080 \
     DATA_DIR=/data

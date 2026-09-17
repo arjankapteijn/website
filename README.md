@@ -99,8 +99,9 @@ zodat alleen de aarde met de live ISS-tracker in beeld blijft.
 
 De site draait als kleine, gehardende Docker-container
 ([Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml)):
-multi-stage build (geen node_modules in het eindimage), niet-root (uid
-10001), `read_only` rootfs, alle capabilities gedropt, `no-new-privileges`,
+multi-stage build (geen node_modules in het eindimage), niet-root (de
+ingebouwde `node`-user, uid 1000), `read_only` rootfs, alle capabilities
+gedropt, `no-new-privileges`,
 geheugen- en pids-limiet, en een healthcheck op `/healthz`.
 
 **GitHub Actions** bouwt het image en pusht het als privé-image naar
