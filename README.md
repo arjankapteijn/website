@@ -33,7 +33,8 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`), met grove herkomst per IP via [ip-api.com](https://ip-api.com) (`server/geo.js`) |
 | IP-lookup | [api64.ipify.org](https://www.ipify.org) (client-side, eenmalig per sessie) - haalt het publieke IP van de bezoeker op voor de terminalprompt en het scheepslogboek |
 | Zonnepanelen | live vermogen van de echte zonnepanelen via [SolarEdge Monitoring API](https://monitoring.solaredge.com) (`server/server.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
-| Hosting | Docker-container op TrueNAS, achter Nginx Proxy Manager (Let's Encrypt) |
+| Serverstatus | live cpu/geheugengebruik van de host, rechtstreeks via `/proc` (`server/host.js` → `/api/host`, geen cloud-API/key), getoond als Activity Monitor-icoontje in de menubalk; klikbaar voor specs + live cijfers |
+| Hosting | Docker-container op TrueNAS, beheerd via [Arcane](https://github.com/getarcaneapp/arcane), achter Nginx Proxy Manager (Let's Encrypt) |
 
 Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd.
 Runtime-afhankelijkheden van externe API's: ISS-telemetrie (wheretheiss.at),
@@ -360,9 +361,40 @@ SOLAREDGE_API_KEY=vul-hier-je-api-key-in
 SOLAREDGE_SITE_ID=vul-hier-je-site-id-in
 ```
 
-Zonder configuratie (of op statische hosting) toont de menubalk een statisch
-accuicoontje en is de modal niet bereikbaar. E-mailinhoud wordt nooit
-meegestuurd naar SolarEdge.
+Zonder configuratie (of op statische hosting) blijft het accu-icoontje wel
+klikbaar - de modal toont dan alleen de statische specs (omvormer, panelen),
+met een melding dat live-cijfers niet beschikbaar zijn. E-mailinhoud wordt
+nooit meegestuurd naar SolarEdge.
+
+## Serverstatus (Activity Monitor)
+
+Het icoontje (📊) naast de accu in de menubalk toont **live cpu-gebruik van de
+machine die deze site host**. Klikken opent een modal (🏠) met ook geheugen-
+en schijfgebruik (incl. uptime) achter de statische specs van de
+homelab-machine (`hosting` in [src/config.ts](src/config.ts) - vul die zelf
+in, incl. `storageTotalGb` voor het schijf-percentage).
+
+Geen cloud-API, geen key: de server leest gewoon `/proc/stat`, `/proc/meminfo`
+en `/proc/uptime`, zoals `top`/`htop` dat ook doen, en voor schijfruimte een
+`statfs` op `DATA_DIR` (standaard `/data`, het volume dat er toch al is) -
+ZFS geeft daarbij geen bruikbare totale pool-grootte terug (een bekende
+eigenaardigheid: elke dataset toont zijn éígen "size"), dus alleen de
+*beschikbare* ruimte komt live binnen; het totaal (`storageTotalGb`) is een
+vaste spec, net als het cpu-model (`server/host.js` → `/api/host`, 15 sec.
+gecachet). **Geen bind-mount nodig** op onze eigen
+Arcane/Docker-setup: getest (2026-09) op de homelab-machine zelf - een gewone
+container ziet daar zónder enige extra volume-config al de écht host-wide
+cijfers (`MemTotal`/uptime in de container matchten exact `free -h` en
+`/proc/uptime` op de host). Dat is geen garantie voor élke Docker-omgeving
+(sommige zetten wel cgroup-limieten of lxcfs in), dus mocht het ergens anders
+tóch nodig zijn: `HOST_PROC_STAT`/`HOST_PROC_MEMINFO`/`HOST_PROC_UPTIME`
+laten een alternatief pad instellen (bv. na een read-only `/proc:/host-proc:ro`
+bind-mount - niet rechtstreeks op `/proc` in de container mounten, dat
+overschrijft 'm en kan de container breken).
+
+Zonder werkende `/proc` (of lokaal op macOS, waar `/proc` niet bestaat) blijft
+het icoontje wel klikbaar - de modal toont dan alleen de statische specs, met
+een melding dat live-cijfers niet beschikbaar zijn.
 
 ## Credits & licenties
 

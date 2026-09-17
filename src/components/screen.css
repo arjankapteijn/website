@@ -74,8 +74,8 @@
   opacity: 0.85;
 }
 
-/* de accu toont het live vermogen van de zonnepanelen en is klikbaar */
-.menubar-battery {
+/* gedeeld door de accu- en de activity-monitor-knop in de menubalk */
+.menubar-icon-btn {
   background: none;
   border: none;
   padding: 0;
@@ -84,7 +84,7 @@
   cursor: pointer;
 }
 
-.menubar-battery:hover {
+.menubar-icon-btn:hover {
   color: #ffe9b3;
   text-shadow: 0 0 12px rgba(255, 220, 120, 0.6);
 }

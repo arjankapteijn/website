@@ -29,6 +29,7 @@ import { fileURLToPath } from 'node:url'
 import { sendMail } from './smtp.js'
 import { sendSignal, formatLogMessage } from './signal.js'
 import { lookupGeo } from './geo.js'
+import { getHostStats } from './host.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const PORT = Number(process.env.PORT) || 8080
@@ -297,6 +298,36 @@ async function handleSolarGet(req, res) {
     .end(solarCache.body)
 }
 
+// ─── Serverstatus (cpu/geheugen van de host) ────────────────────────────
+// Live cijfers voor het Activity Monitor-icoontje in de menubalk; leest
+// /proc rechtstreeks (server/host.js) - korte cache tegen te frequente
+// /proc-reads bij snel achter elkaar pollende tabbladen.
+
+const HOST = {
+  ttlMs: 15_000,
+}
+let hostCache = { at: 0, body: null }
+
+async function handleHostGet(req, res) {
+  if (Date.now() - hostCache.at > HOST.ttlMs) {
+    try {
+      hostCache.body = JSON.stringify(await getHostStats())
+      hostCache.at = Date.now()
+    } catch (err) {
+      // Geen /proc (container zonder host-mount, of niet-Linux) → widget blijft uit
+      console.error('host-stats mislukt:', err?.message ?? err)
+      if (!hostCache.body) {
+        res.writeHead(501).end()
+        return
+      }
+      hostCache.at = Date.now()
+    }
+  }
+  res
+    .writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+    .end(hostCache.body)
+}
+
 // ─── Statische bestanden ────────────────────────────────────────────────
 
 async function serveStatic(req, res) {
@@ -346,6 +377,8 @@ http
       handleEmailPost(req, res).catch(() => res.writeHead(500).end())
     } else if (req.method === 'GET' && req.url === '/api/solar') {
       handleSolarGet(req, res).catch(() => res.writeHead(500).end())
+    } else if (req.method === 'GET' && req.url === '/api/host') {
+      handleHostGet(req, res).catch(() => res.writeHead(500).end())
     } else if (req.url === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok')
     } else if (req.method === 'GET' || req.method === 'HEAD') {

@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 // gedeeld met de productieserver; JS-module zonder eigen typings
 // @ts-expect-error - geen .d.ts voor server/signal.js
 import { sendSignal, formatLogMessage } from './server/signal.js'
+// @ts-expect-error - geen .d.ts voor server/host.js
+import { getHostStats } from './server/host.js'
 
 // Dev-versie van het scheepslogboek: pusht getypte commando's als Signal-
 // bericht, net als server/server.js in productie. Config uit .env
@@ -112,7 +114,39 @@ function solarProxy(): Plugin {
   }
 }
 
+// Dev-versie van /api/host: zelfde gedrag als server/server.js - leest /proc
+// rechtstreeks (geen key nodig). Op macOS bestaat /proc niet, dus dit blijft
+// hier altijd 501; op een Linux-dev-machine (of met /proc gemount) werkt het.
+function hostProxy(): Plugin {
+  let cache = { at: 0, body: '' }
+  return {
+    name: 'host-proxy',
+    configureServer(server) {
+      server.middlewares.use('/api/host', (req, res) => {
+        void (async () => {
+          if (req.method !== 'GET') {
+            res.statusCode = 405
+            return res.end()
+          }
+          if (Date.now() - cache.at > 15_000) {
+            try {
+              cache = { at: Date.now(), body: JSON.stringify(await getHostStats()) }
+            } catch {
+              if (!cache.body) {
+                res.statusCode = 501
+                return res.end()
+              }
+            }
+          }
+          res.setHeader('Content-Type', 'application/json')
+          res.end(cache.body)
+        })()
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), terminalLog(), solarProxy()],
+  plugins: [react(), terminalLog(), solarProxy(), hostProxy()],
 })
