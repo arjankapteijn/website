@@ -8,8 +8,10 @@ RUN npm run build
 
 # ── Runtime (hardened) ──────────────────────────────────────────────────
 # Alleen de gebouwde site + de zero-dependency server; geen npm, geen
-# node_modules. Draait als niet-root; bestandssysteem kan read-only
-# (het logboek schrijft naar het /data-volume).
+# node_modules. Draait als niet-root; bestandssysteem kan read-only (het
+# scheepslogboek gaat via Signal, er wordt niets weggeschreven). Het
+# /data-volume dient alleen nog voor de statfs-call van de serverstatus-
+# widget (vrije schijfruimte) - blijft zelf leeg.
 FROM node:24-alpine
 RUN apk add --no-cache wget \
   && addgroup -g 10001 app \
