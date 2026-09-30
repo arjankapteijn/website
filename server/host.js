@@ -6,16 +6,18 @@
 // dat elders wél nodig zijn (cgroup-limieten, lxcfs), dan wijzen de
 // HOST_PROC_*-env-vars naar een alternatief pad. Bestaat /proc niet (bv.
 // macOS-dev), dan gooien de readFns - de caller vangt dat op en toont de
-// "geen live data"-fallback. DATA_DIR (voor de statfs-call) is dezelfde
-// env-var als de rest van de app al gebruikt (zie Dockerfile), geen
-// apart HOST_-voorvoegsel.
+// "geen live data"-fallback.
 
 import { readFile as defaultReadFile, statfs as defaultStatfs } from 'node:fs/promises'
 
 const PROC_STAT = process.env.HOST_PROC_STAT ?? '/proc/stat'
 const PROC_MEMINFO = process.env.HOST_PROC_MEMINFO ?? '/proc/meminfo'
 const PROC_UPTIME = process.env.HOST_PROC_UPTIME ?? '/proc/uptime'
-const DATA_DIR = process.env.DATA_DIR ?? '/data'
+// Schijfruimte via statfs op de root van de container zelf: die overlay
+// ligt in Docker's data-root (op TrueNAS /mnt/.ix-apps/docker, dataset
+// tank/ix-apps/docker) en overlayfs geeft de vrije ruimte van dát
+// filesystem door - dus de pool-vrije-ruimte, zonder volume of mount.
+const DISK_PATH = '/'
 
 /**
  * Parseert de eerste regel van /proc/stat ("cpu  user nice system idle …")
@@ -61,7 +63,7 @@ export function parseUptime(raw) {
 }
 
 /**
- * Beschikbare ruimte (GB) op de ZFS-pool waar DATA_DIR op leeft. ZFS'
+ * Beschikbare ruimte (GB) op de ZFS-pool waar de container op leeft. ZFS'
  * statfs geeft geen bruikbare "totale pool-grootte" terug (elke dataset
  * toont zijn éígen used + de gedeelde pool-vrije-ruimte als "size", een
  * bekende ZFS-eigenaardigheid) - vandaar dat alleen het beschikbare aantal
@@ -69,7 +71,7 @@ export function parseUptime(raw) {
  * net als het cpu-model en de ram-grootte.
  */
 export async function readDiskAvailGb({ statfsImpl = defaultStatfs } = {}) {
-  const s = await statfsImpl(DATA_DIR)
+  const s = await statfsImpl(DISK_PATH)
   return Math.round((s.bavail * s.bsize) / 1_073_741_824 * 10) / 10
 }
 

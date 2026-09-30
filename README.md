@@ -266,8 +266,10 @@ in, incl. `storageTotalGb` voor het schijf-percentage).
 
 Geen cloud-API, geen key: de server leest gewoon `/proc/stat`, `/proc/meminfo`
 en `/proc/uptime`, zoals `top`/`htop` dat ook doen, en voor schijfruimte een
-`statfs` op `DATA_DIR` (standaard `/data`, het volume dat er toch al is) -
-ZFS geeft daarbij geen bruikbare totale pool-grootte terug (een bekende
+`statfs` op `/` in de container - geen volume nodig: de container-root is
+een overlay in Docker's data-root (op TrueNAS `/mnt/.ix-apps/docker`, dataset
+`tank/ix-apps/docker`) en geeft zo de vrije ruimte van de pool door
+(geverifieerd 2026-09-30: exact gelijk aan `zfs get available`). ZFS geeft daarbij geen bruikbare totale pool-grootte terug (een bekende
 eigenaardigheid: elke dataset toont zijn éígen "size"), dus alleen de
 *beschikbare* ruimte komt live binnen; het totaal (`storageTotalGb`) is een
 vaste spec, net als het cpu-model (`server/host.js` → `/api/host`, 15 sec.
