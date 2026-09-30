@@ -16,11 +16,6 @@ services:
       # host-poort 8090 → container-poort 8080; pas de linkerkant gerust aan
       - '8090:8080'
     env_file: .env # SMTP-, Signal- en SolarEdge-gegevens; zie .env.example
-    volumes:
-      # Alleen nodig voor de serverstatus-widget (statfs op deze mount voor
-      # vrije schijfruimte) - er wordt zelf niets naar weggeschreven, het
-      # scheepslogboek gaat via Signal, niet naar bestand.
-      - ./data:/data
     # ── hardening ── (image draait al als niet-root, zie Dockerfile `USER node`;
     # geen tmpfs voor /tmp nodig - niets in de app of Node zelf schrijft daar
     # iets naar, getest zonder tmpfs met read_only: true en geen enkele fout)
