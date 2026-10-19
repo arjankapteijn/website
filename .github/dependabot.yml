@@ -33,6 +33,11 @@ updates:
     ignore:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript-majors pas als typescript-eslint ze ondersteunt (TS 7
+      # faalde op npm ci: peer-conflict met typescript-eslint 8, zie #23).
+      # Weghalen zodra typescript-eslint TS 7 in zijn peer-range heeft.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # ── Docker base-image (node:22-alpine) ───────────────────────────────
   - package-ecosystem: "docker"
