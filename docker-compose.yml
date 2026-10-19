@@ -20,6 +20,11 @@ services:
     # geen tmpfs voor /tmp nodig - niets in de app of Node zelf schrijft daar
     # iets naar, getest zonder tmpfs met read_only: true en geen enkele fout)
     read_only: true
+    # enige schrijfbare plek: het roterende SolarEdge-refresh-token
+    # (SOLAREDGE_TOKEN_FILE=/data/solaredge/token.json). Hostmap eigendom
+    # van uid 1000 (`node` in de container), bv. `chown 1000:1000 ./solaredge`.
+    volumes:
+      - ./solaredge:/data/solaredge
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true

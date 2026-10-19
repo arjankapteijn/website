@@ -11,8 +11,9 @@ RUN npm run build
 # ── Runtime (hardened) ──────────────────────────────────────────────────
 # Alleen de gebouwde site + de zero-dependency server; geen npm, geen
 # node_modules. Draait als niet-root; bestandssysteem kan read-only (het
-# scheepslogboek gaat via Signal, er wordt niets weggeschreven) - dus geen
-# volume nodig. De serverstatus-widget meet vrije schijfruimte via statfs
+# scheepslogboek gaat via Signal). Enige uitzondering: het roterende
+# SolarEdge-refresh-token, via een bind mount op /data/solaredge (zie
+# docker-compose.yml) - bewust geen VOLUME hier. De serverstatus-widget meet vrije schijfruimte via statfs
 # op de container-root zelf (zie server/host.js).
 # Gebruikt de ingebouwde `node`-user (uid 1000) van het base-image i.p.v.
 # zelf een user aan te maken; `wget` zit al standaard in Alpine (BusyBox).

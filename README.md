@@ -32,7 +32,7 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
 | Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`), met grove herkomst per IP via [ip-api.com](https://ip-api.com) (`server/geo.js`) |
 | IP-lookup | [api64.ipify.org](https://www.ipify.org) (client-side, eenmalig per sessie) - haalt het publieke IP van de bezoeker op voor de terminalprompt en het scheepslogboek |
-| Zonnepanelen | live vermogen van de echte zonnepanelen via [SolarEdge Monitoring API](https://monitoring.solaredge.com) (`server/server.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
+| Zonnepanelen | live vermogen van de echte zonnepanelen via de [SolarEdge Monitoring API V2](https://api-docs.solaredge.com) (`server/solar.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
 | Serverstatus | live cpu/geheugengebruik van de host, rechtstreeks via `/proc` (`server/host.js` → `/api/host`, geen cloud-API/key), getoond als Activity Monitor-icoontje in de menubalk; klikbaar voor specs + live cijfers |
 | Hosting | Docker-container op TrueNAS, beheerd via [Arcane](https://github.com/getarcaneapp/arcane), achter Nginx Proxy Manager (Let's Encrypt) |
 
@@ -100,7 +100,8 @@ zodat alleen de aarde met de live ISS-tracker in beeld blijft.
 De site draait als kleine, gehardende Docker-container
 ([Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml)):
 multi-stage build (geen node_modules in het eindimage), niet-root (de
-ingebouwde `node`-user, uid 1000), `read_only` rootfs, alle capabilities
+ingebouwde `node`-user, uid 1000), `read_only` rootfs (enige schrijfbare
+plek: de bind mount `/data/solaredge` voor het SolarEdge-token), alle capabilities
 gedropt, `no-new-privileges`,
 geheugen- en pids-limiet, en een healthcheck op `/healthz`.
 
@@ -240,15 +241,62 @@ Het accuicoontje (🔋) in de menubalk toont het **live vermogen van de echte
 zonnepanelen** als percentage van het piekvermogen (2,7 kWp). Klikken opent
 een modal met vandaag-opbrengst, maandopbrengst en lifetime-totaal.
 
-De data komt van de [SolarEdge Monitoring API](https://monitoring.solaredge.com)
-via `/api/solar`. De server cachet de respons (standaard 15 min) om binnen de
-gratis daglimiet van SolarEdge (~300 calls/dag) te blijven.
+De data komt van de [SolarEdge Monitoring API V2](https://api-docs.solaredge.com)
+(SolarEdge ONE Developer Platform) via `/api/solar` (`server/solar.js`). De
+V1-API (`?api_key=`) stopt op 1 november 2026; V1-keys werken niet op V2.
+
+| Veld | V2-bron | Credits |
+| --- | --- | --- |
+| `power` | laatste kwartierwaarde van `GET /sites/{id}/power` | 1 per verversing |
+| `today`, `month` | dagbuckets van `GET /sites/{id}/energy?resolution=DAY` (deze maand) | 1 per verversing |
+| `lifetime` | som van `GET /sites/{id}/energy?resolution=YEAR` | 1 per 6 uur |
+| tijdzone, installatiedatum | `GET /sites/{id}` | 1 per herstart |
+
+De Free-tier geeft **2.000 credits/maand** (~67/dag, max. 10/minuut). De
+server cachet daarom standaard **60 minuten** (≈ 53 calls/dag) en gebruikt bij
+storingen een oplopende backoff (5 min → max. 6 uur, ook als er nog niets
+gecachet is), zodat een kapotte koppeling niet per bezoeker credits verbrandt.
+Bij een 429 wacht hij minstens `retry-after`, bij een op-gebruikt maandtegoed
+6 uur. "Huidig vermogen" is dus het gemiddelde van het laatste kwartier, niet
+live: écht live vermogen zit in de Advanced API (betaalde tier).
+
+### Authenticatie (OAuth, eenmalig)
+
+V2 kent voor huiseigenaren geen statische API-key meer, alleen OAuth "Site
+Access" ([Homeowner and Self-Access Guide](https://api-docs.solaredge.com/docs/developer-platform/df8kx5j4z9vi0-homeowner-and-self-access-guide)):
+
+1. Log in op [developer.solaredge.com](https://developer.solaredge.com) met je
+   mySolarEdge-account en vul het developer-profiel in (Free-tier).
+2. **Create Application** → Service *Monitoring API* → **Site Access**.
+   Redirect URI bv. `http://localhost:8080/oauth/callback`, scope `SITE_DATA`.
+   Kopieer Client ID en Client Secret (secret wordt maar één keer getoond).
+3. Zet `SOLAREDGE_CLIENT_ID`, `SOLAREDGE_CLIENT_SECRET`, `SOLAREDGE_SITE_ID`,
+   `SOLAREDGE_REDIRECT_URI` en `SOLAREDGE_TOKEN_FILE` in `.env`.
+4. `node server/solaredge-auth.js` → open de geprinte URL, keur goed, kopieer
+   de URL waar je op belandt (een foutpagina is prima).
+5. `node server/solaredge-auth.js '<die URL>'` → schrijft het refresh token
+   naar `SOLAREDGE_TOKEN_FILE`. Draai dit bij voorkeur ín de container
+   (`docker exec -it arjankapteijn-website node server/solaredge-auth.js …`),
+   dan landt het meteen op het volume. Herstart daarna de container.
+
+Het refresh token **roteert**: elke verversing (elke ~2 uur bij gebruik)
+levert een nieuw token en maakt het oude ongeldig. Daarom staat het in een
+bestand op een schrijfbaar volume (`/data/solaredge`, zie
+[docker-compose.yml](docker-compose.yml)); zonder volume werkt het tot de
+volgende herstart. Een refresh token verloopt na 30 dagen ongebruikt; de
+server ververst daarom zelf als het token ouder is dan 7 dagen. De grant
+zelf (`access_duration=24`) is 24 maanden geldig, daarna stap 4-5 herhalen.
+Gebruik voor `npm run dev` **niet** hetzelfde token-bestand als productie:
+wie als eerste ververst maakt het token van de ander ongeldig.
 
 Configuratie via `.env` (zie [.env.example](.env.example)):
 
 ```env
-SOLAREDGE_API_KEY=vul-hier-je-api-key-in
+SOLAREDGE_CLIENT_ID=vul-hier-je-client-id-in
+SOLAREDGE_CLIENT_SECRET=vul-hier-je-client-secret-in
 SOLAREDGE_SITE_ID=vul-hier-je-site-id-in
+SOLAREDGE_REDIRECT_URI=http://localhost:8080/oauth/callback
+SOLAREDGE_TOKEN_FILE=/data/solaredge/token.json
 ```
 
 Zonder configuratie (of op statische hosting) blijft het accu-icoontje wel
