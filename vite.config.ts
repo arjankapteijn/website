@@ -7,6 +7,8 @@ import react from '@vitejs/plugin-react'
 import { sendSignal, formatLogMessage } from './server/signal.js'
 // @ts-expect-error - geen .d.ts voor server/host.js
 import { getHostStats } from './server/host.js'
+// @ts-expect-error - geen .d.ts voor server/solar.js
+import { createSolarCache, createSolarClient, isSolarConfigured, solarConfigFromEnv } from './server/solar.js'
 
 function getGitVersion(): string {
   try {
@@ -69,58 +71,39 @@ function terminalLog(): Plugin {
   }
 }
 
-// Dev-versie van /api/solar: zelfde gedrag als server/server.js - key uit
-// .env, 15 minuten cache (SolarEdge heeft een daglimiet), key blijft server-side.
+// Dev-versie van /api/solar: zelfde module als server/server.js - config uit
+// .env, cache + backoff, credentials blijven server-side. Let op: dev en
+// productie delen géén refresh token (elke refresh maakt het vorige
+// ongeldig); geef dev een eigen SOLAREDGE_TOKEN_FILE of laat het uit.
 function solarProxy(): Plugin {
-  let cache = { at: 0, body: '' }
+  let cache: { get: () => Promise<string | null> } | null = null
   return {
     name: 'solar-proxy',
     configureServer(server) {
       server.middlewares.use('/api/solar', (req, res) => {
         void (async () => {
-          try {
-            process.loadEnvFile(path.join(__dirname, '.env'))
-          } catch {
-            /* geen .env */
+          if (!cache) {
+            try {
+              process.loadEnvFile(path.join(__dirname, '.env'))
+            } catch {
+              /* geen .env */
+            }
+            const cfg = solarConfigFromEnv()
+            if (isSolarConfigured(cfg)) {
+              cache = createSolarCache({ load: createSolarClient(cfg).fetchSolar, ttlMs: cfg.ttlMs })
+            }
           }
-          const key = process.env.SOLAREDGE_API_KEY
-          const site = process.env.SOLAREDGE_SITE_ID
-          if (req.method !== 'GET' || !key || !site) {
+          if (req.method !== 'GET' || !cache) {
             res.statusCode = 501
             return res.end()
           }
-          if (Date.now() - cache.at > 15 * 60_000) {
-            try {
-              const r = await fetch(`https://monitoringapi.solaredge.com/site/${site}/overview?api_key=${key}`)
-              if (!r.ok) throw new Error(`status ${r.status}`)
-              const { overview } = (await r.json()) as {
-                overview?: {
-                  currentPower?: { power?: number }
-                  lastDayData?: { energy?: number }
-                  lastMonthData?: { energy?: number }
-                  lifeTimeData?: { energy?: number }
-                  lastUpdateTime?: string
-                }
-              }
-              cache = {
-                at: Date.now(),
-                body: JSON.stringify({
-                  power: overview?.currentPower?.power ?? 0,
-                  today: overview?.lastDayData?.energy ?? 0,
-                  month: overview?.lastMonthData?.energy ?? 0,
-                  lifetime: overview?.lifeTimeData?.energy ?? 0,
-                  updatedAt: overview?.lastUpdateTime ?? null,
-                }),
-              }
-            } catch {
-              if (!cache.body) {
-                res.statusCode = 502
-                return res.end()
-              }
-            }
+          const body = await cache.get()
+          if (!body) {
+            res.statusCode = 502
+            return res.end()
           }
           res.setHeader('Content-Type', 'application/json')
-          res.end(cache.body)
+          res.end(body)
         })()
       })
     },

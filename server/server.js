@@ -2,6 +2,7 @@
 //   - serveert de gebouwde site uit dist/
 //   - POST /api/log    → scheepslogboek (Signal-push, zie server/signal.js)
 //   - POST /api/email  → verstuurt e-mail via SMTP2GO (zie server/smtp.js)
+//   - GET  /api/solar  → zonnepanelen via SolarEdge V2 (zie server/solar.js)
 //   - GET  /healthz    → healthcheck voor Docker
 //
 //   npm run build && npm start
@@ -15,6 +16,8 @@
 //   SMTP_USER / SMTP_PASS   zonder deze twee is /api/email uitgeschakeld
 //   MAIL_TO    default info@arjankapteijn.nl
 //   MAIL_FROM  default Station AK-01 <noreply@arjankapteijn.nl>
+//   SOLAREDGE_CLIENT_ID / _CLIENT_SECRET / _SITE_ID / _REFRESH_TOKEN /
+//   SOLAREDGE_TOKEN_FILE   zonder deze is /api/solar uitgeschakeld (zie server/solar.js)
 //
 // Bezoekers-IP's gaan onverkort mee in de Signal-melding (bewuste keuze),
 // met een grove herkomst ("Amsterdam, NL") via server/geo.js;
@@ -30,6 +33,7 @@ import { sendMail } from './smtp.js'
 import { sendSignal, formatLogMessage } from './signal.js'
 import { lookupGeo } from './geo.js'
 import { getHostStats } from './host.js'
+import { createSolarCache, createSolarClient, isSolarConfigured, solarConfigFromEnv } from './solar.js'
 
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 const PORT = Number(process.env.PORT) || 8080
@@ -254,48 +258,34 @@ async function handleEmailPost(req, res) {
 }
 
 // ─── Zonnepanelen via SolarEdge ─────────────────────────────────────────
-// SolarEdge hanteert een daglimiet (~300 calls); de server cachet daarom
-// 15 minuten en de API-key blijft hier - nooit richting de browser.
+// Monitoring API V2 met OAuth (zie server/solar.js). Credits zijn schaars
+// (Free: 2.000/maand), dus de server cachet standaard 60 minuten, met
+// backoff bij storingen, en de credentials blijven hier - nooit richting
+// de browser.
 
-const SOLAR = {
-  key: process.env.SOLAREDGE_API_KEY || '',
-  site: process.env.SOLAREDGE_SITE_ID || '',
-  ttlMs: 15 * 60_000,
+const SOLAR = solarConfigFromEnv()
+const solarClient = isSolarConfigured(SOLAR) ? createSolarClient(SOLAR) : null
+const solarCache = solarClient ? createSolarCache({ load: solarClient.fetchSolar, ttlMs: SOLAR.ttlMs }) : null
+if (solarClient) {
+  // refresh tokens verlopen na 30 dagen ongebruikt; dagelijks checken
+  const keepAlive = () =>
+    solarClient.keepAlive().catch((err) => console.error('solaredge keep-alive mislukt:', err?.message ?? err))
+  setInterval(keepAlive, 24 * 60 * 60_000).unref()
 }
-let solarCache = { at: 0, body: null }
 
 async function handleSolarGet(req, res) {
-  if (!SOLAR.key || !SOLAR.site) {
+  if (!solarCache) {
     res.writeHead(501).end() // niet geconfigureerd → client toont statisch percentage
     return
   }
-  if (Date.now() - solarCache.at > SOLAR.ttlMs) {
-    try {
-      const r = await fetch(
-        `https://monitoringapi.solaredge.com/site/${SOLAR.site}/overview?api_key=${SOLAR.key}`,
-      )
-      if (!r.ok) throw new Error(`status ${r.status}`)
-      const { overview } = await r.json()
-      solarCache.body = JSON.stringify({
-        power: overview?.currentPower?.power ?? 0, // W
-        today: overview?.lastDayData?.energy ?? 0, // Wh
-        month: overview?.lastMonthData?.energy ?? 0,
-        lifetime: overview?.lifeTimeData?.energy ?? 0,
-        updatedAt: overview?.lastUpdateTime ?? null,
-      })
-      solarCache.at = Date.now()
-    } catch (err) {
-      console.error('solaredge mislukt:', err?.message ?? err)
-      if (!solarCache.body) {
-        res.writeHead(502).end()
-        return
-      }
-      solarCache.at = Date.now() // bij storing niet elke request opnieuw proberen
-    }
+  const body = await solarCache.get()
+  if (!body) {
+    res.writeHead(502).end()
+    return
   }
   res
     .writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' })
-    .end(solarCache.body)
+    .end(body)
 }
 
 // ─── Serverstatus (cpu/geheugen van de host) ────────────────────────────
