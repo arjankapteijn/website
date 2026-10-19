@@ -249,8 +249,11 @@ V1-API (`?api_key=`) stopt op 1 november 2026; V1-keys werken niet op V2.
 | --- | --- | --- |
 | `power` | laatste kwartierwaarde van `GET /sites/{id}/power` | 1 per verversing |
 | `today`, `month` | dagbuckets van `GET /sites/{id}/energy?resolution=DAY` (deze maand) | 1 per verversing |
-| `lifetime` | som van `GET /sites/{id}/energy?resolution=YEAR` | 1 per 6 uur |
-| tijdzone, installatiedatum | `GET /sites/{id}` | 1 per herstart |
+| `lifetime` | `GET /sites/{id}/lifetime-energy` | 1 per 6 uur |
+| tijdzone | `GET /sites/{id}` | 1 per herstart |
+
+`from`/`to` gaan als UTC mét zone (`2026-10-19T12:05:00Z`); zonder zone
+antwoordt V2 met 400.
 
 De Free-tier geeft **2.000 credits/maand** (~67/dag, max. 10/minuut). De
 server cachet daarom standaard **60 minuten** (≈ 53 calls/dag) en gebruikt bij
