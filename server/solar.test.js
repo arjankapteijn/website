@@ -8,10 +8,12 @@ import {
   isSolarConfigured,
   localStamp,
   solarConfigFromEnv,
+  utcStamp,
+  zonedMidnight,
 } from './solar.js'
 
 // Vormen volgens de V2-docs (Measurements-envelope, site-metadata)
-const SITE = { siteId: 994149, installationDate: '2019-05-01T00:00:00+02:00', location: { timezone: 'Europe/Amsterdam' } }
+const SITE = { siteId: 994149, location: { timezone: 'Europe/Amsterdam' } }
 const POWER = {
   unit: 'W',
   resolution: 'QUARTER_HOUR',
@@ -30,14 +32,7 @@ const MONTH = {
     { timestamp: '2026-10-19T00:00:00+02:00', value: 2.25 },
   ],
 }
-const YEARS = {
-  unit: 'MWH',
-  resolution: 'YEAR',
-  values: [
-    { timestamp: '2025-01-01T00:00:00+01:00', value: 2.5 },
-    { timestamp: '2026-01-01T00:00:00+01:00', value: 2 },
-  ],
-}
+const LIFETIME = { energy: 4.5, unit: 'MWH', lastUpdateTime: '2026-10-19T13:45:00+02:00' }
 
 const CFG = {
   clientId: 'cid',
@@ -84,13 +79,13 @@ function fakeApi({ overrides = {} } = {}) {
     }
     const key = url.pathname.endsWith('/power')
       ? 'power'
-      : url.pathname.endsWith('/energy')
-        ? url.searchParams.get('resolution') === 'YEAR'
-          ? 'year'
-          : 'month'
-        : 'site'
+      : url.pathname.endsWith('/lifetime-energy')
+        ? 'lifetime'
+        : url.pathname.endsWith('/energy')
+          ? 'month'
+          : 'site'
     if (overrides[key]) return overrides[key](url, init)
-    return json({ power: POWER, month: MONTH, year: YEARS, site: SITE }[key])
+    return json({ power: POWER, month: MONTH, lifetime: LIFETIME, site: SITE }[key])
   })
   return { fetchFn, calls }
 }
@@ -114,9 +109,19 @@ describe('solarConfigFromEnv / isSolarConfigured', () => {
   })
 })
 
-describe('localStamp', () => {
-  it('geeft site-lokale tijd zonder offset', () => {
+describe('tijdstempels', () => {
+  it('localStamp geeft site-lokale wandtijd', () => {
     expect(localStamp(new Date(NOW), 'Europe/Amsterdam')).toBe('2026-10-19T14:05:00')
+  })
+
+  it('utcStamp geeft UTC mét zone en zonder ms (V2 weigert zoneloze waarden)', () => {
+    expect(utcStamp(new Date(NOW + 123))).toBe('2026-10-19T12:05:00Z')
+  })
+
+  it('zonedMidnight rekent lokale middernacht om naar UTC, ook rond zomertijd', () => {
+    expect(zonedMidnight('2026-10-01', 'Europe/Amsterdam').toISOString()).toBe('2026-09-30T22:00:00.000Z')
+    expect(zonedMidnight('2026-11-01', 'Europe/Amsterdam').toISOString()).toBe('2026-10-31T23:00:00.000Z')
+    expect(zonedMidnight('2026-03-29', 'Europe/Amsterdam').toISOString()).toBe('2026-03-28T23:00:00.000Z')
   })
 })
 
@@ -129,6 +134,17 @@ describe('buildSolarBody', () => {
       lifetime: 4.5e6,
       updatedAt: '2026-10-19T13:45:00+02:00',
     })
+  })
+
+  it('herkent vandaag ook als de API UTC-timestamps teruggeeft', () => {
+    const utcMonth = {
+      unit: 'WH',
+      values: [
+        { timestamp: '2026-10-17T22:00:00Z', value: 4000 },
+        { timestamp: '2026-10-18T22:00:00Z', value: 2250 },
+      ],
+    }
+    expect(buildSolarBody({ power: POWER, monthEnergy: utcMonth, lifetimeWh: 0, todayDate: '2026-10-19' }).today).toBe(2250)
   })
 
   it('valt terug op nullen bij lege responses', () => {
@@ -163,13 +179,12 @@ describe('createSolarClient', () => {
     expect(Object.fromEntries(power.url.searchParams)).toEqual({
       resolution: 'QUARTER_HOUR',
       unit: 'W',
-      from: '2026-10-19T13:05:00',
-      to: '2026-10-19T14:05:00',
+      from: '2026-10-19T11:05:00Z',
+      to: '2026-10-19T12:05:00Z',
     })
     const month = calls.find((c) => c.url.searchParams.get('resolution') === 'DAY')
-    expect(month.url.searchParams.get('from')).toBe('2026-10-01T00:00:00')
-    const year = calls.find((c) => c.url.searchParams.get('resolution') === 'YEAR')
-    expect(year.url.searchParams.get('from')).toBe('2019-05-01T00:00:00')
+    expect(month.url.searchParams.get('from')).toBe('2026-09-30T22:00:00Z') // 1 okt 00:00 Amsterdam
+    expect(calls.filter((c) => c.url.pathname.endsWith('/lifetime-energy'))).toHaveLength(1)
     // geen secrets in URL's
     for (const c of calls) expect(String(c.url)).not.toMatch(/secret|rt-|at-/)
   })
@@ -195,7 +210,7 @@ describe('createSolarClient', () => {
     now += 60 * 60_000
     await client.fetchSolar()
     expect(calls.filter((c) => String(c.url) === TOKEN_URL)).toHaveLength(1)
-    expect(calls.filter((c) => c.url.searchParams.get('resolution') === 'YEAR')).toHaveLength(1)
+    expect(calls.filter((c) => c.url.pathname.endsWith('/lifetime-energy'))).toHaveLength(1)
     expect(calls.filter((c) => c.url.pathname === '/v2/sites/994149')).toHaveLength(1)
   })
 
@@ -222,6 +237,14 @@ describe('createSolarClient', () => {
     const client = createSolarClient(CFG, { fetchFn, now: () => NOW, fs: memFs(), log: quietLog })
     expect((await client.fetchSolar()).power).toBe(1340)
     expect(calls.filter((c) => String(c.url) === TOKEN_URL)).toHaveLength(2)
+  })
+
+  it('neemt de Problem Details-detail van SolarEdge op in de fout', async () => {
+    const { fetchFn } = fakeApi({
+      overrides: { power: () => json({ title: 'Bad Request', detail: "'from' must include a time zone" }, 400) },
+    })
+    const client = createSolarClient(CFG, { fetchFn, now: () => NOW, fs: memFs(), log: quietLog })
+    await expect(client.fetchSolar()).rejects.toThrow("/sites/994149/power status 400: 'from' must include a time zone")
   })
 
   it('geeft bij 429 (maandtegoed op) een lange retryAfter mee', async () => {

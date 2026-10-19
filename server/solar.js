@@ -13,7 +13,10 @@
 //
 // Credits: Free-tier = 2.000 calls/maand (~67/dag), 10/minuut. Per
 // verversing kost dit 2 calls (/power + /energy per dag), lifetime 1 call per
-// 6 uur en de site-metadata 1 call per proces. Met de standaard cache van
+// 6 uur en de site-metadata (tijdzone) 1 call per proces.
+//
+// Tijdstempels: from/to MÉT zone (UTC, "…Z"); waarden zonder zone geeft
+// V2 een 400 (live vastgesteld 2026-10-19, ondanks andere bronnen). Met de standaard cache van
 // 60 minuten ≈ 53 calls/dag.
 //
 // Docs: https://api-docs.solaredge.com/docs/developer-platform/df8kx5j4z9vi0-homeowner-and-self-access-guide
@@ -65,8 +68,8 @@ export function toBase(value, unit, table) {
 }
 
 /**
- * Datum → "YYYY-MM-DDTHH:MM:SS" in de lokale tijd van de site, zonder
- * offset - het formaat dat V2 voor from/to verwacht.
+ * Datum → "YYYY-MM-DDTHH:MM:SS" in de lokale tijd van de site. Alleen voor
+ * datumlogica (vandaag, begin van de maand) - niet als API-parameter.
  */
 export function localStamp(date, timeZone) {
   const parts = Object.fromEntries(
@@ -86,6 +89,24 @@ export function localStamp(date, timeZone) {
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`
 }
 
+/** Datum → "YYYY-MM-DDTHH:MM:SSZ" (UTC, zonder ms) - het from/to-formaat van V2. */
+export function utcStamp(date) {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z')
+}
+
+/**
+ * Het UTC-moment van lokale middernacht ("YYYY-MM-DD") in een tijdzone,
+ * zonder libraries: offset meten via Intl en één keer corrigeren (DST).
+ */
+export function zonedMidnight(day, timeZone) {
+  const [y, m, d] = day.split('-').map(Number)
+  const wall = Date.UTC(y, m - 1, d)
+  const offsetAt = (t) => Date.parse(`${localStamp(new Date(t), timeZone)}Z`) - t
+  let t = wall - offsetAt(wall)
+  t = wall - offsetAt(t)
+  return new Date(t)
+}
+
 /** Laatste niet-lege waarde (met timestamp) uit een Measurements-envelope. */
 export function latestSample(body) {
   const values = Array.isArray(body?.values) ? body.values : []
@@ -100,7 +121,7 @@ export function latestSample(body) {
  * ({ power, today, month, lifetime, updatedAt }, in W en Wh).
  * Pure functie, goed te testen.
  */
-export function buildSolarBody({ power, monthEnergy, lifetimeWh, todayDate }) {
+export function buildSolarBody({ power, monthEnergy, lifetimeWh, todayDate, timeZone = 'Europe/Amsterdam' }) {
   const sample = latestSample(power)
   const energyUnit = monthEnergy?.unit
   const days = Array.isArray(monthEnergy?.values) ? monthEnergy.values : []
@@ -110,7 +131,11 @@ export function buildSolarBody({ power, monthEnergy, lifetimeWh, todayDate }) {
     const wh = toBase(d?.value, energyUnit, ENERGY_TO_WH)
     if (wh === null) continue
     month += wh
-    if (String(d.timestamp ?? '').startsWith(todayDate)) today = wh
+    // bucket-timestamp = begin van de dag; terug naar site-lokale datum,
+    // ongeacht of de API een lokale offset of UTC teruggeeft
+    const ts = Date.parse(d.timestamp ?? '')
+    const day = Number.isNaN(ts) ? String(d.timestamp ?? '').slice(0, 10) : localStamp(new Date(ts), timeZone).slice(0, 10)
+    if (day === todayDate) today = wh
   }
   return {
     power: (sample && toBase(sample.value, power?.unit ?? 'W', POWER_TO_W)) ?? 0, // W
@@ -129,7 +154,7 @@ export function createSolarClient(cfg, { fetchFn = fetch, now = Date.now, fs = d
   let access = null // { token, expiresAt }
   let refresh = null // { refreshToken, savedAt } - in geheugen leidend
   let refreshing = null
-  let site = null // { timeZone, installationDate }
+  let site = null // { timeZone }
   let lifetime = null // { wh, at }
   let warnedNoFile = false
 
@@ -211,6 +236,9 @@ export function createSolarClient(cfg, { fetchFn = fetch, now = Date.now, fs = d
       return apiGet(pathname, params, true)
     }
     if (!r.ok) {
+      // RFC 7807 Problem Details: "detail" zegt wát er mis is (geen secrets)
+      const problem = await r.json().catch(() => null)
+      const detail = String(problem?.detail || problem?.title || '').slice(0, 200)
       let retryAfterMs = 0
       if (r.status === 429) {
         const remainingMinute = r.headers.get('x-ratelimit-remaining-minute')
@@ -220,7 +248,10 @@ export function createSolarClient(cfg, { fetchFn = fetch, now = Date.now, fs = d
             ? 6 * 60 * 60_000
             : (Number(r.headers.get('retry-after')) || 60) * 1000
       }
-      throw new SolarEdgeError(`${pathname} status ${r.status}`, { status: r.status, retryAfterMs })
+      throw new SolarEdgeError(`${pathname} status ${r.status}${detail ? `: ${detail}` : ''}`, {
+        status: r.status,
+        retryAfterMs,
+      })
     }
     return r.json()
   }
@@ -228,51 +259,42 @@ export function createSolarClient(cfg, { fetchFn = fetch, now = Date.now, fs = d
   async function siteInfo() {
     if (site) return site
     const body = await apiGet(`/sites/${cfg.siteId}`)
-    site = {
-      timeZone: body?.location?.timezone || 'Europe/Amsterdam',
-      installationDate: String(body?.installationDate ?? '2010-01-01').slice(0, 10),
-    }
+    site = { timeZone: body?.location?.timezone || 'Europe/Amsterdam' }
     return site
   }
 
   /** Haalt een verse momentopname op in het frontend-formaat. */
   async function fetchSolar() {
-    const { timeZone, installationDate } = await siteInfo()
+    const { timeZone } = await siteInfo()
     const nowDate = new Date(now())
-    const nowLocal = localStamp(nowDate, timeZone)
-    const todayDate = nowLocal.slice(0, 10)
-    const hourAgo = localStamp(new Date(now() - 60 * 60_000), timeZone)
+    const todayDate = localStamp(nowDate, timeZone).slice(0, 10)
+    const monthStart = zonedMidnight(`${todayDate.slice(0, 8)}01`, timeZone)
     const lifetimeStale = !lifetime || now() - lifetime.at > LIFETIME_TTL_MS
 
-    const [power, monthEnergy, yearEnergy] = await Promise.all([
+    const [power, monthEnergy, lifetimeBody] = await Promise.all([
       // laatste kwartierwaarde = "huidig" vermogen (V2 heeft geen live-W op Free)
-      apiGet(`/sites/${cfg.siteId}/power`, { resolution: 'QUARTER_HOUR', unit: 'W', from: hourAgo, to: nowLocal }),
+      apiGet(`/sites/${cfg.siteId}/power`, {
+        resolution: 'QUARTER_HOUR',
+        unit: 'W',
+        from: utcStamp(new Date(now() - 60 * 60_000)),
+        to: utcStamp(nowDate),
+      }),
       // dagbuckets van deze maand → maandtotaal én vandaag in één call
       apiGet(`/sites/${cfg.siteId}/energy`, {
         resolution: 'DAY',
         unit: 'WH',
-        from: `${todayDate.slice(0, 8)}01T00:00:00`,
-        to: nowLocal,
+        from: utcStamp(monthStart),
+        to: utcStamp(nowDate),
       }),
-      // YEAR is de enige resolutie zonder maximale periode
-      lifetimeStale
-        ? apiGet(`/sites/${cfg.siteId}/energy`, {
-            resolution: 'YEAR',
-            unit: 'WH',
-            from: `${installationDate}T00:00:00`,
-            to: nowLocal,
-          })
-        : null,
+      // lifetime-teller van de site: { energy, unit, lastUpdateTime }
+      lifetimeStale ? apiGet(`/sites/${cfg.siteId}/lifetime-energy`) : null,
     ])
 
-    if (yearEnergy) {
-      const wh = (yearEnergy.values ?? []).reduce(
-        (sum, v) => sum + (toBase(v?.value, yearEnergy.unit, ENERGY_TO_WH) ?? 0),
-        0,
-      )
-      lifetime = { wh, at: now() }
+    if (lifetimeBody) {
+      const wh = toBase(lifetimeBody.energy, lifetimeBody.unit ?? 'WH', ENERGY_TO_WH)
+      if (wh !== null) lifetime = { wh, at: now() }
     }
-    return buildSolarBody({ power, monthEnergy, lifetimeWh: lifetime?.wh, todayDate })
+    return buildSolarBody({ power, monthEnergy, lifetimeWh: lifetime?.wh, todayDate, timeZone })
   }
 
   /** Ververst het refresh token als het langer dan 7 dagen niet gebruikt is. */
