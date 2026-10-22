@@ -32,12 +32,19 @@ function getHost(): Promise<HostData | null> {
   return promise
 }
 
+/** Eerste meting alvast starten tijdens het 3D-laden (zie prefetchSolar). */
+export function prefetchHostStats(): void {
+  void getHost()
+}
+
 export function useHostStats(): HostData | null {
   const [data, setData] = useState<HostData | null>(cached)
   useEffect(() => {
     let alive = true
     const load = () => void getHost().then((d) => alive && d && setData(d))
-    load()
+    // na de prefetch staat er al een verse meting; dan wacht de eerstvolgende
+    // poll-tick gewoon af i.p.v. direct een tweede (1s-cpu-sample) request
+    if (!cached) load()
     const id = setInterval(load, hosting.pollMs)
     return () => {
       alive = false

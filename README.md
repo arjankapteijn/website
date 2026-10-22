@@ -32,8 +32,8 @@ an interactive terminal. Dutch on `.nl`, English on `.com`.*
 | E-mail | server-side via [SMTP2GO](https://www.smtp2go.com) (`server/smtp.js`, zero-dependency); fallback `mailto:` |
 | Scheepslogboek | getypte commando's als Signal-push via [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) (`server/signal.js`), met grove herkomst per IP via [ip-api.com](https://ip-api.com) (`server/geo.js`) |
 | IP-lookup | [api64.ipify.org](https://www.ipify.org) (client-side, eenmalig per sessie) - haalt het publieke IP van de bezoeker op voor de terminalprompt en het scheepslogboek |
-| Zonnepanelen | live vermogen van de echte zonnepanelen via de [SolarEdge Monitoring API V2](https://api-docs.solaredge.com) (`server/solar.js` → `/api/solar`, gecachet), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
-| Serverstatus | live cpu/geheugengebruik van de host, rechtstreeks via `/proc` (`server/host.js` → `/api/host`, geen cloud-API/key), getoond als Activity Monitor-icoontje in de menubalk; klikbaar voor specs + live cijfers |
+| Zonnepanelen | live vermogen van de echte zonnepanelen via de [SolarEdge Monitoring API V2](https://api-docs.solaredge.com) (`server/solar.js` → `/api/solar`, gecachet; al tijdens het 3D-laden opgehaald), getoond als accuicoontje in de menubalk; klikbaar voor uitgebreide dagoverzicht-modal |
+| Serverstatus | live cpu/geheugengebruik van de host, rechtstreeks via `/proc` (`server/host.js` → `/api/host`, geen cloud-API/key; eerste meting al tijdens het 3D-laden), getoond als Activity Monitor-icoontje in de menubalk; klikbaar voor specs + live cijfers |
 | Hosting | Docker-container op TrueNAS, beheerd via [Arcane](https://github.com/getarcaneapp/arcane), achter Nginx Proxy Manager (Let's Encrypt) |
 
 Alle assets (3D-model, textures, DRACO-decoder, HDR) worden lokaal geserveerd.

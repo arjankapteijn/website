@@ -27,6 +27,11 @@ function getSolar(): Promise<SolarData | null> {
   return promise
 }
 
+/** Start de fetch al vóór het 3D-laden, zodat de menubalk niet later 'inschiet'. */
+export function prefetchSolar(): void {
+  void getSolar()
+}
+
 export function useSolar(): SolarData | null {
   const [data, setData] = useState<SolarData | null>(cached)
   useEffect(() => {
