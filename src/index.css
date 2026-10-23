@@ -249,6 +249,16 @@ canvas {
   background: rgba(70, 120, 255, 0.28);
 }
 
+/* Smal scherm: drie knoppen naast elkaar - krapper, zodat elk label op één regel past */
+@media (max-width: 640px) {
+  .photo-modal__actions a,
+  .photo-modal__actions button {
+    padding: 10px 6px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+}
+
 /* ── Stats-popups (zonnepanelen, hosting) ──────────────────────────── */
 .photo-modal__icon {
   width: 96px;

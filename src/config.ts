@@ -10,6 +10,7 @@ export const profile = {
 
   linkedin: 'https://www.linkedin.com/in/arjankapteijn/',
   github: 'https://github.com/arjankapteijn/website',
+  devnull: 'https://dev-null.sh/@arjankapteijn',
 
   photo: '/photo.webp',
 }

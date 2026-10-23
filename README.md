@@ -76,7 +76,8 @@ npm run preview  # test de productiebuild lokaal
 
 ## Personaliseren
 
-- **Identiteit & links** - `src/config.ts` (naam, e-mail, LinkedIn, foto-pad).
+- **Identiteit & links** - `src/config.ts` (naam, e-mail, LinkedIn, GitHub,
+  /dev/null, foto-pad).
 - **Teksten per taal** - `src/i18n.ts` (bio, titel, skills, alle UI- en
   terminalteksten; de TODO-markers wachten op echte content).
 - **Foto** - `public/photo.webp` (vierkant, 800×800).
