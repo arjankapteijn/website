@@ -243,10 +243,6 @@ export default function Terminal({ lang, setLang, onOpenPhoto }: TerminalProps) 
       case 'mail':
         startEmail()
         break
-      case 'linkedin':
-        window.open(profile.linkedin, '_blank', 'noopener')
-        print({ text: t.linkedinOpening, cls: 'ok' }, { text: '' })
-        break
       case 'photo':
       case 'foto':
         print({ text: t.photoOpening, cls: 'ok' }, { text: '' })

@@ -52,7 +52,6 @@ Klik op het MacBook-scherm en typ:
 | `skills` | vaardigheden |
 | `email` | stuur een e-mail vanuit de terminal (onderwerp → bericht → optioneel antwoordadres → bevestigen; verzonden via SMTP2GO) |
 | `photo` / `open arjan.jpg` | opent de foto op het bureaublad |
-| `linkedin` | opent het LinkedIn-profiel |
 | `iss` | live positie, hoogte en snelheid van het échte ISS |
 | `lang en` / `lang nl` | wissel van taal (wordt onthouden) |
 | `neofetch` | systeeminfo van deze MacBook (M1 Max 😉) |
@@ -76,7 +75,8 @@ npm run preview  # test de productiebuild lokaal
 
 ## Personaliseren
 
-- **Identiteit & links** - `src/config.ts` (naam, e-mail, LinkedIn, foto-pad).
+- **Identiteit & links** - `src/config.ts` (naam, e-mail, LinkedIn, GitHub,
+  /dev/null, foto-pad).
 - **Teksten per taal** - `src/i18n.ts` (bio, titel, skills, alle UI- en
   terminalteksten; de TODO-markers wachten op echte content).
 - **Foto** - `public/photo.webp` (vierkant, 800×800).

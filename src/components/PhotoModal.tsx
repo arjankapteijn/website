@@ -38,6 +38,9 @@ export default function PhotoModal({ lang, onClose, onEmail }: PhotoModalProps) 
           <a href={profile.linkedin} target="_blank" rel="noreferrer">
             LinkedIn
           </a>
+          <a href={profile.devnull} target="_blank" rel="me noreferrer">
+            /dev/null
+          </a>
           <button type="button" onClick={onEmail}>
             E-mail
           </button>
