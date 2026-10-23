@@ -119,7 +119,6 @@ const nl = {
       { text: '  skills     waar is hij goed in?' },
       { text: '  email      stuur een e-mail vanuit de terminal' },
       { text: '  photo      open de foto op het bureaublad' },
-      { text: '  linkedin   open het LinkedIn-profiel' },
       { text: '  iss        live positie van het échte ISS' },
       { text: '  lang       switch language (lang en / lang nl)' },
       { text: '  neofetch   systeeminfo van deze MacBook' },
@@ -146,7 +145,6 @@ const nl = {
     promptReply: 'e-mailadres (optioneel)> ',
     promptConfirm: 'verzenden? (j/n) ',
     yes: ['j', 'ja', 'y', 'yes'],
-    linkedinOpening: 'LinkedIn wordt geopend in een nieuw tabblad…',
     photoOpening: 'arjan.jpg wordt geopend…',
     openNotFound: (arg: string) => `open: kan '${arg || '?'}' niet vinden`,
     lsFiles: 'arjan.jpg     over-mij.txt     .geheimen',
@@ -199,7 +197,7 @@ const nl = {
     ] as TermLine[],
     exit: [
       { text: 'Ontsnappen aan een baan om de aarde kost 7,9 km/s.', cls: 'warn' },
-      { text: "Makkelijker: typ 'linkedin'.", cls: 'dim' },
+      { text: 'Makkelijker: de icoontjes rechtsonder.', cls: 'dim' },
       { text: '' },
     ] as TermLine[],
     notFound: (name: string) =>
@@ -324,7 +322,6 @@ const en: typeof nl = {
       { text: '  skills     what is he good at?' },
       { text: '  email      send an e-mail from the terminal' },
       { text: '  photo      open the photo on the desktop' },
-      { text: '  linkedin   open the LinkedIn profile' },
       { text: '  iss        live position of the real ISS' },
       { text: '  lang       switch language (lang en / lang nl)' },
       { text: '  neofetch   system info for this MacBook' },
@@ -351,7 +348,6 @@ const en: typeof nl = {
     promptReply: 'e-mail address (optional)> ',
     promptConfirm: 'send? (y/n) ',
     yes: ['y', 'yes', 'j', 'ja'],
-    linkedinOpening: 'Opening LinkedIn in a new tab…',
     photoOpening: 'Opening arjan.jpg…',
     openNotFound: (arg: string) => `open: cannot find '${arg || '?'}'`,
     lsFiles: 'arjan.jpg     about-me.txt     .secrets',
@@ -404,7 +400,7 @@ const en: typeof nl = {
     ],
     exit: [
       { text: 'Escaping Earth orbit takes 7.9 km/s.', cls: 'warn' },
-      { text: "Easier: type 'linkedin'.", cls: 'dim' },
+      { text: 'Easier: the icons in the bottom right.', cls: 'dim' },
       { text: '' },
     ],
     notFound: (name: string) => [
