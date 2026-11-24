@@ -62,15 +62,17 @@ const SMTP = {
 }
 
 // ─── Security-headers (internet.nl) ─────────────────────────────────────
-// CSP-randvoorwaarden van deze site: React/drei zetten inline
-// style-attributen ('unsafe-inline' in style-src), de DRACO-decoder draait
-// als blob-worker met WASM ('wasm-unsafe-eval' + worker-src blob:) en de
-// site praat met de ISS- en IP-API's (connect-src).
+// CSP-randvoorwaarden van deze site: de DRACO-decoder draait als
+// blob-worker met WASM ('wasm-unsafe-eval' + worker-src blob:) en de site
+// praat met de ISS- en IP-API's (connect-src). Geen 'unsafe-inline' in
+// style-src: React/drei zetten stijlen via de CSSOM (element.style), en dat
+// valt niet onder CSP. internet.nl keurt 'unsafe-inline' in élke directive
+// af, dus ook in style-src-attr; voeg het dus niet terug toe.
 const SECURITY_HEADERS = {
   'Content-Security-Policy': [
     "default-src 'self'",
     "script-src 'self' 'wasm-unsafe-eval'",
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self'",
     // blob: - GLTFLoader laadt texturen die in het .glb-model zitten als blob-URL
     "img-src 'self' data: blob:",
     // blob: - three.js haalt model-texturen met fetch() op via blob-URL's
